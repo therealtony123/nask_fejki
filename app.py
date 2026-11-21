@@ -86,5 +86,14 @@ with st.sidebar:
     st.caption("Zbiór organizatora: katalog data/ (struktura do_udostępnienia/<id>/). "
                "Własne materiały zbierają: fb_collector.py (Meta Ad Library) "
                "i harvest_urls.py (OpenPhish, AA419).")
+    try:
+        import subprocess
+        ver = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], capture_output=True,
+            text=True, cwd=Path(__file__).parent, timeout=5).stdout.strip()
+    except Exception:
+        ver = "?"
+    st.caption(f"wersja: {ver} · jeśli strona nie wygląda jak w opisie — "
+               f"odśwież ją (F5 / Ctrl+Shift+R)")
 
 pg.run()
