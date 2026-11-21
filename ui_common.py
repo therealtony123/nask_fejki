@@ -298,18 +298,30 @@ def render_graph(graph, mode: str = "hub"):
 <script>
 (function () {
   var D = %s, E = %s, V = "%s", panel = document.getElementById("kf-panel"), last = null;
+  var container = document.getElementById("mynetwork");
+  function shrink(w) {
+    if (!container) return;
+    container.style.width = (w ? w + "px" : "100%");
+    setTimeout(function () {
+      network.setSize(container.clientWidth || window.innerWidth,
+                      container.clientHeight || 640);
+      network.fit({ animation: { duration: 350, easingFunction: "easeInOutQuad" } });
+    }, 30);
+  }
   function show(html, key, x, y) {
-    if (last === key) { panel.style.display = "none"; last = null; return; }
+    if (last === key) { panel.style.display = "none"; last = null; shrink(null); return; }
     panel.innerHTML =
       "<div style='display:flex;justify-content:space-between;margin-bottom:8px'>" +
       "<span style='font-size:11px;color:#00ff9c'>graf v" + V + "</span>" +
       "<span style='color:#00ff9c;cursor:pointer' onclick='window.kfClose()'>✕ zamknij</span></div>" +
       html;
-    panel.style.left = Math.min(x, window.innerWidth - 430) + "px";
+    var px2 = Math.min(x, window.innerWidth - 430);
+    panel.style.left = px2 + "px";
     panel.style.top = Math.max(8, Math.min(y, window.innerHeight - 320)) + "px";
     panel.style.display = "block"; last = key;
+    shrink(px2);
   }
-  window.kfClose = function () { panel.style.display = "none"; last = null; };
+  window.kfClose = function () { panel.style.display = "none"; last = null; shrink(null); };
   network.on("click", function (p) {
     var px = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.x : 200;
     var py = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.y : 160;
@@ -321,7 +333,7 @@ def render_graph(graph, mode: str = "hub"):
         var k1 = ed.from + "|" + ed.to, k2 = ed.to + "|" + ed.from;
         show(E[k1] || E[k2] || "", "e:" + k1, x, y);
       }
-    } else { panel.style.display = "none"; last = null; }
+    } else { panel.style.display = "none"; last = null; shrink(null); }
   });
 })();
 </script>""" % (_panel_css, _json.dumps(detail, ensure_ascii=False),
