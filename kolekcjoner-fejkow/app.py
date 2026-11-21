@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from kfk import (Store, Tfidf, assign_new_incident, extract_from_url_text,
                  extract_incident, pair_similarity, scan)
+from kfk.similarity import negative_evidence
 
 HOME = Path.home()
 PROJ = Path(__file__).parent
@@ -131,11 +132,12 @@ if "graph" in st.session_state:
     m3.metric("Kampanie", len(graph["clusters"]))
     m4.metric("Twarde powiązania", sum(1 for e in graph["edges"] if e["hard"]))
 
-    tab_prz, tab_kamp, tab_graf, tab_inc, tab_nowy, tab_eks = st.tabs(
+    tab_prz, tab_kamp, tab_graf, tab_inc, tab_nowy, tab_eks, tab_meta = st.tabs(
         ["Przegląd kampanii", "Kampanie", "Graf zależności", "Incydenty", "Nowy materiał",
-         "Eksport (STIX/IoC)"])
+         "Eksport (STIX/IoC)", "Biblioteka reklam (bonus)"])
 
     with tab_prz:
+        inc_feats = store.load_incidents()
         for c in graph["clusters"]:
             with st.expander(f"{c['cluster_id']} — {len(c['members'])} materiałów | "
                              f"{c['label'][:110]}", expanded=True):
@@ -145,6 +147,24 @@ if "graph" in st.session_state:
                          f"średnie podobieństwo: {c['mean_score']}")
                 if c.get("first_seen"):
                     st.write(f"Pierwsza aktywność: {c['first_seen']} | ostatnia: {c.get('last_seen')}")
+                pats = {}
+                for f in inc_feats:
+                    if f["id"] in c["members"]:
+                        for d in f["infra"].get("domain_patterns", []):
+                            pats.setdefault(d["pattern"], set()).add(d["domain"])
+                if pats:
+                    st.write("**Wzorce nazw domen:**")
+                    for p, doms in sorted(pats.items()):
+                        st.write(f"• `{p}` → {', '.join(sorted(doms))}")
+                names_by_inc = {}
+                for f in inc_feats:
+                    if f["id"] in c["members"]:
+                        names_by_inc[f["id"]] = set(f.get("faces", {}).get("known_names") or [])
+                vals = list(names_by_inc.values())
+                if vals:
+                    shared_names = set.intersection(*vals) if len(vals) > 1 else vals[0]
+                    if shared_names:
+                        st.write(f"**Wizerunki osób:** {', '.join(sorted(shared_names))}")
 
     with tab_kamp:
         sel = st.selectbox("Kampania", [c["cluster_id"] for c in graph["clusters"]])
@@ -157,6 +177,36 @@ if "graph" in st.session_state:
                              f"{' ⚡TWARDE' if e['hard'] else ''}"):
                 for ev in e["evidence"]:
                     st.write(f"• {ev}")
+        st.markdown("---")
+        st.markdown("### 🔍 Dlaczego materiały NIE zostały połączone?")
+        all_ids = [n["id"] for n in graph["nodes"]]
+        col_a, col_b = st.columns(2)
+        with col_a:
+            sel_a = st.selectbox("Materiał A", all_ids, key="pa")
+        with col_b:
+            sel_b = st.selectbox("Materiał B", list(reversed(all_ids)), key="pb")
+        if sel_a and sel_b and sel_a != sel_b:
+            inc_feats = store.load_incidents()
+            fa = next(x for x in inc_feats if x["id"] == sel_a)
+            fb = next(x for x in inc_feats if x["id"] == sel_b)
+            tfidf = Tfidf()
+            tfidf.fit([x["text"].get("body_norm", "") for x in inc_feats])
+            r = pair_similarity(fa, fb, tfidf)
+            neg = negative_evidence(fa, fb, tfidf)
+            edge_pairs = {(e["a"], e["b"]) for e in graph["edges"]} | {(e["b"], e["a"]) for e in graph["edges"]}
+            linked = (sel_a, sel_b) in edge_pairs
+            st.write(f"Podobieństwo ważone: **{r['score']:.3f}** → "
+                     f"{'✅ POŁĄCZONE' if linked else '❌ nie połączone (poniżej progu)'}")
+            if r["evidence"]:
+                st.markdown("**Przesłanki ZA:**")
+                for e in r["evidence"]:
+                    st.write(f"• {e}")
+            if neg:
+                st.markdown("**Przesłanki PRZECIW:**")
+                for e in neg:
+                    st.write(f"• {e}")
+            if not r["evidence"] and not neg:
+                st.info("Brak porównywalnych danych po obu stronach (materiały niekompletne).")
 
     with tab_graf:
         st.caption("Kolor węzła = kampania; grubość krawędzi = podobieństwo; czerwone krawędzie = twarde przesłanki (kliknij krawędź/węzeł, aby zobaczyć dowody).")
@@ -173,6 +223,10 @@ if "graph" in st.session_state:
             st.markdown(f"**Plików:** {f['n_files']}, **obrazów:** {len(f['images'])}")
             st.markdown(f"**Domeny:** {', '.join(f['infra']['registrable']) or '(brak)'}")
             st.markdown(f"**Trackery:** {', '.join(f['infra']['tracker_ids']) or '(brak)'}")
+            faces = f.get("faces", {})
+            if faces.get("persons"):
+                st.markdown("**Wizerunki osób:** " + ", ".join(
+                    f"{p['name']} (dopasowanie {p['score']})" for p in faces["persons"]))
             if f["text"].get("ocr"):
                 st.markdown(f"**OCR (zrzut ekranu):** _{f['text']['ocr'][:400]}_")
         with c2:
@@ -212,6 +266,14 @@ if "graph" in st.session_state:
                             verdict = assign_new_incident(nf, stored, matches, join_thr)
                             st.subheader(verdict["verdict"])
                             st.write(verdict["explanation"])
+                            if matches and matches[0]["score"] < join_thr:
+                                bs = next((x for x in stored if x["id"] == matches[0]["b"]), None)
+                                if bs:
+                                    neg = negative_evidence(nf, bs, tfidf)
+                                    if neg:
+                                        st.markdown("**Przesłanki PRZECIW przypisaniu:**")
+                                        for e in neg:
+                                            st.write(f"• {e}")
                             for m in matches[:5]:
                                 with st.expander(f"{m['b']} ({m['title'][:60]}) — "
                                                  f"score {m['score']:.3f}"):
@@ -219,6 +281,48 @@ if "graph" in st.session_state:
                                         st.write(f"• {ev}")
                 except Exception as e:
                     st.error(f"Nie udało się pobrać/zbadać materiału: {e}")
+
+    with tab_meta:
+        st.write("**Bonus:** automatyczne wyszukiwanie podejrzanych reklam w bibliotece "
+                 "Meta Ad Library wg słów kluczowych i porównanie ich z wykrytymi kampaniami. "
+                 "Wymaga tokena Graph API (opcjonalny — bez niego używamy zapisanej próbki, "
+                 "plik `samples/meta_ads_sample.json`).")
+        token = st.text_input("Token Meta Ad Library (Graph API)", type="password")
+        terms = st.text_input("Słowa kluczowe", "zarabiaj z domu inwestycja")
+        if st.button("🔎 Szukaj w bibliotece reklam"):
+            from kfk.adlibrary import search_ads, load_sample, compare_ads
+            stored = store.load_incidents()
+            tfidf = Tfidf()
+            tfidf.fit([x["text"].get("body_norm", "") for x in stored])
+            ads = None
+            if token:
+                try:
+                    with st.spinner("Pobieranie reklam z Meta Ad Library…"):
+                        ads = search_ads(token, terms)
+                except Exception as e:
+                    st.error(f"Błąd API: {e}")
+                    st.info("Próbuję zapisaną próbkę…")
+            if ads is None:
+                ads = load_sample()
+                if ads:
+                    st.info("Użyto zapisanej przykładowej odpowiedzi API (demo offline).")
+            if not ads:
+                st.warning("Brak danych. Podaj token lub umieść plik samples/meta_ads_sample.json.")
+            else:
+                st.success(f"Pobrano {len(ads.get('data', []))} reklam — porównuję z kampaniami…")
+                rows = compare_ads(ads, stored, tfidf)
+                for row in rows:
+                    b = row["best"]
+                    verd = ("🚨 POWIĄZANA Z KAMPANIĄ" if b and b["score"] >= join_thr
+                            else "nowy wzorzec")
+                    with st.expander(f"[{row['page']}] {row['text'][:90]}… — {verd}"):
+                        st.write(f"**Strona reklamodawcy:** {row['page']} | start: {row['start']}")
+                        st.write(f"**Najlepsze dopasowanie:** incydent {b['id']} "
+                                 f"({b['title'][:60]}) — score {b['score']:.3f}")
+                        for ev in b["evidence"][:4]:
+                            st.write(f"• {ev}")
+                        if row["snapshot"]:
+                            st.write(f"[Zrzut reklamy w bibliotece Meta]({row['snapshot']})")
 
     with tab_eks:
         st.write("Artefakty zrozumiałe dla CSIRT/NASK: pakiet **STIX 2.1** (kampanie, "

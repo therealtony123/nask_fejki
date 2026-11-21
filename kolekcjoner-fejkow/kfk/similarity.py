@@ -15,6 +15,8 @@ VIEW_WEIGHTS = {
     "infra": 0.20,      # wspólne domeny rejestrowalne
     "trackers": 0.30,   # te same identyfikatory analityki (GA/Pixel/GTM) — bardzo silny sygnał
     "structure": 0.10,  # wspólny szablon HTML (klasy CSS, skrypty, favicon)
+    "domain_pattern": 0.08,  # wspólny wzorzec nazw domen (TLD + schemat nazewniczy)
+    "faces": 0.30,      # te same wizerunki osób (baza referencyjna / embeddingi twarzy)
 }
 EDGE_THRESHOLD = 0.25       # próg tworzenia krawędzi
 PHASH_MAX_DIST = 12
@@ -22,12 +24,18 @@ DHASH_MAX_DIST = 8
 
 
 class Tfidf:
-    """Lekki TF-IDF na n-gramach znakowych (odporny na polską fleksję)."""
+    """Lekki TF-IDF na n-gramach znakowych (odporny na polską fleksję).
 
-    def __init__(self, ngram_range=(2, 4), min_df=2):
+    min_df=1 + podliniowe tf (1+log) — pełny słownik z IDF tłumi n-gramy
+    wspólne (boilerplate), zamiast je wyrzucać przy małym zbiorze.
+    """
+
+    def __init__(self, ngram_range=(2, 4), min_df=1, max_len=5000):
         self.ngram_range = ngram_range
         self.min_df = min_df
+        self.max_len = max_len
         self.df = Counter()
+        self.idf = {}
 
     def _ngrams(self, s: str):
         s = re.sub(r"[^a-z0-9ąćęłńóśźż]+", "", s.lower())
@@ -40,17 +48,18 @@ class Tfidf:
         for t in texts:
             if not t:
                 continue
-            for g in set(self._ngrams(t)):
+            for g in set(self._ngrams(t[:self.max_len])):
                 self.df[g] += 1
         self.df = Counter({g: c for g, c in self.df.items() if c >= self.min_df})
+        n = len(self.df)
+        self.idf = {g: 1 + math.log((n + 1) / (c + 1)) for g, c in self.df.items()}
 
     def transform(self, text: str):
         if not text:
             return {}
-        tf = Counter(self._ngrams(text))
-        n = len(self.df)
-        vec = {g: c * (1 + math.log((n + 1) / (self.df[g] + 1)))
-               for g, c in tf.items() if g in self.df}
+        tf = Counter(self._ngrams(text[:self.max_len]))
+        vec = {g: (1 + math.log(c)) * self.idf[g]
+               for g, c in tf.items() if g in self.idf}
         norm = math.sqrt(sum(v * v for v in vec.values())) or 1.0
         return {g: v / norm for g, v in vec.items()}
 
@@ -86,12 +95,13 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
                 views["title"] = (0.9, [f"prawie identyczny tytuł (ratio {r:.2f})"])
             else:
                 views["title"] = (0.0, [])
-    # 2. tekst
+    # 2. tekst — aktywny dopiero przy dostatecznie długich tekstach i cos > 0.30
+    # (krótkie teksty reklamowe mają wysoki przypadkowy overlap n-gramów)
     ba, bb = fa["text"].get("body_norm"), fb["text"].get("body_norm")
-    if ba and bb:
+    if ba and bb and len(ba) >= 200 and len(bb) >= 200:
         c = tfidf.cosine(tfidf.transform(ba), tfidf.transform(bb))
-        if c > 0.10:
-            views["text"] = (round(min(c * 1.5, 1.0), 3),
+        if c > 0.30:
+            views["text"] = (round(min(c, 1.0), 3),
                              [f"podobieństwo treści: cos={c:.2f}"])
         else:
             views["text"] = (0.0, [])
@@ -141,6 +151,32 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
                                   [f"wspólny szablon HTML (jaccard klas CSS: {jc:.2f})"])
         else:
             views["structure"] = (0.0, [])
+    # 7. wzorce nazw domen — słaby sygnał, pomocny w połączeniu z innymi
+    pa = [d["pattern"] for d in fa["infra"].get("domain_patterns", [])]
+    pb = [d["pattern"] for d in fb["infra"].get("domain_patterns", [])]
+    if pa and pb:
+        shared = set(pa) & set(pb)
+        if shared:
+            ex_a = next(d for d in fa["infra"]["domain_patterns"] if d["pattern"] in shared)
+            ex_b = next(d for d in fb["infra"]["domain_patterns"] if d["pattern"] in shared)
+            views["domain_pattern"] = (
+                0.5,
+                [f"wspólny wzorzec nazw domen: {ex_a['domain']} ≈ {ex_b['domain']} "
+                 f"({ex_a['tld']}, {','.join(ex_a['classes'])})"],
+            )
+        else:
+            views["domain_pattern"] = (0.0, [])
+    # 8. wizerunki osób — wspólne osoby z bazy lub ta sama nieznana twarz
+    from .faces import face_similarity
+    fa_f, fb_f = fa.get("faces"), fb.get("faces")
+    if (fa_f and fb_f and
+            (fa_f.get("known_names") or fa_f.get("unknown_embs")) and
+            (fb_f.get("known_names") or fb_f.get("unknown_embs"))):
+        s, ev = face_similarity(fa, fb)
+        if s > 0:
+            views["faces"] = (s, ev)
+        else:
+            views["faces"] = (0.0, [])
     # twarde przesłanki
     hard = []
     if ta and tb and ta == tb:
@@ -149,7 +185,33 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
         hard.append("te same ID analityki")
     if "images" in views and views["images"][0] >= 0.5:
         hard.append("warianty graficzne")
+    if "faces" in views and views["faces"][0] >= 1.0:
+        hard.append("ta sama osoba")
     return views, hard
+
+
+def negative_evidence(fa: dict, fb: dict, tfidf: Tfidf) -> list:
+    """Przesłanki PRZECIWKO połączeniu — widoki z danymi po obu stronach, ale zerowym
+    wynikiem. Pokazują analitykowi, dlaczego materiały pozostały rozdzielone
+    (odporność na fałszywe połączenia)."""
+    views, _ = view_scores(fa, fb, tfidf)
+    neg = []
+    if "title" in views and views["title"][0] == 0:
+        neg.append(f"różne tytuły: «{(fa['text'].get('title') or '')[:60]}» vs "
+                   f"«{(fb['text'].get('title') or '')[:60]}»")
+    if "infra" in views and views["infra"][0] == 0:
+        neg.append("brak wspólnych domen rejestrowalnych")
+    if "trackers" in views and views["trackers"][0] == 0:
+        neg.append("różne identyfikatory analityki (brak wspólnych GA/Pixel/GTM)")
+    if "images" in views and views["images"][0] == 0:
+        neg.append("brak pasujących wariantów graficznych (odległość hashów > próg)")
+    if "structure" in views and views["structure"][0] == 0:
+        neg.append("różne szablony HTML (rozłączne klasy CSS)")
+    if "domain_pattern" in views and views["domain_pattern"][0] == 0:
+        neg.append("różne wzorce nazw domen (inne TLD/schematy nazewnicze)")
+    if "faces" in views and views["faces"][0] == 0:
+        neg.append("brak wspólnych wizerunków osób")
+    return neg
 
 
 def pair_similarity(fa: dict, fb: dict, tfidf: Tfidf) -> dict:
