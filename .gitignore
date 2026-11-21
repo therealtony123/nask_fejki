@@ -11,3 +11,4 @@ data/
 *.stix.json
 kfk/faces_ref/embeddings.json
 meta_token.txt
+lib/
