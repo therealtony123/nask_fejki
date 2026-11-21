@@ -299,8 +299,7 @@ def render_graph(graph, mode: str = "hub"):
 (function () {
   var D = %s, E = %s, V = "%s", panel = document.getElementById("kf-panel"), last = null;
   function show(html, key, x, y) {
-    if (last === key) { panel.style.display = "none"; last = null;
-      network.setOptions({physics: {enabled: true}}); return; }
+    if (last === key) { panel.style.display = "none"; last = null; return; }
     panel.innerHTML =
       "<div style='display:flex;justify-content:space-between;margin-bottom:8px'>" +
       "<span style='font-size:11px;color:#00ff9c'>graf v" + V + "</span>" +
@@ -309,10 +308,8 @@ def render_graph(graph, mode: str = "hub"):
     panel.style.left = Math.min(x, window.innerWidth - 430) + "px";
     panel.style.top = Math.max(8, Math.min(y, window.innerHeight - 320)) + "px";
     panel.style.display = "block"; last = key;
-    network.setOptions({physics: {enabled: false}});
   }
-  window.kfClose = function () { panel.style.display = "none"; last = null;
-    network.setOptions({physics: {enabled: true}}); };
+  window.kfClose = function () { panel.style.display = "none"; last = null; };
   network.on("click", function (p) {
     var px = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.x : 200;
     var py = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.y : 160;
@@ -324,8 +321,7 @@ def render_graph(graph, mode: str = "hub"):
         var k1 = ed.from + "|" + ed.to, k2 = ed.to + "|" + ed.from;
         show(E[k1] || E[k2] || "", "e:" + k1, x, y);
       }
-    } else { panel.style.display = "none"; last = null;
-      network.setOptions({physics: {enabled: true}}); }
+    } else { panel.style.display = "none"; last = null; }
   });
 })();
 </script>""" % (_panel_css, _json.dumps(detail, ensure_ascii=False),
