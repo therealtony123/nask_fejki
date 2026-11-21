@@ -301,7 +301,7 @@ def render_graph(graph, mode: str = "hub"):
   var container = document.getElementById("mynetwork");
   function shrink(w) {
     if (!container) return;
-    container.style.width = (w ? w + "px" : "100%");
+    container.style.width = (w ? w + "px" : "100%%");
     setTimeout(function () {
       network.setSize(container.clientWidth || window.innerWidth,
                       container.clientHeight || 640);
