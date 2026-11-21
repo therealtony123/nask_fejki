@@ -5,6 +5,7 @@ import streamlit as st
 
 from kolekcjoner import ui
 from kolekcjoner import Material, assign_new_material, extract_features, from_url
+from kolekcjoner import szukacz
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -128,4 +129,131 @@ if st.session_state.get("_last_mat") is not None:
         ui.add_material(mat)
         st.session_state.pop("_last_mat", None)
         st.toast("Dodano! Zobacz go w Kampaniach i na Mapie.")
+        st.rerun()
+
+# ============================================================= wiele materiałów
+
+st.divider()
+st.markdown("#### Masz wiele materiałów naraz? Wrzuć wszystko na raz")
+st.caption("Każda **linia** to jeden materiał: adres URL, tekst reklamy, log "
+           "komunikacji albo zwykła wskazówka (np. nazwa produktu). Obrazy "
+           "wgraj z kolei poniżej — każdy plik liczony jest jako osobny "
+           "materiał. Żadnych plików JSON.")
+
+_line_hint = ("https://podejrzana-strona.example\n"
+              "„Gwarantowany zysk 5000 zł dziennie z kryptowalut!” (tekst)\n"
+              "email od „inwestora”: witaj, mam dla Ciebie okazję... (log)\n"
+              "kurs lewandowski 5000 zł (wskazówka)")
+bulk_txt = st.text_area(
+    "Lista materiałów — każdy w osobnej linii:", key="bulk_urls",
+    placeholder=_line_hint)
+up_imgs = st.file_uploader(
+    "Lub wgraj wiele obrazów / zrzutów ekranu (każdy plik = jeden materiał):",
+    type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="bulk_imgs")
+
+if st.button("🚀 Analizuj wszystkie"):
+    linie = [l.strip() for l in (bulk_txt or "").splitlines() if l.strip()]
+    urls = [l for l in linie if l.lower().startswith("http")]
+    teksty = [l for l in linie if not l.lower().startswith("http")]
+    obrazy = list(up_imgs or [])
+    if not (urls or teksty or obrazy):
+        st.warning("Wklej przynajmniej jeden materiał (adres, tekst, wskazówkę) "
+                   "albo wgraj obrazy.")
+        st.stop()
+
+    st.success(f"Analizuję {len(urls) + len(teksty) + len(obrazy)} materiałów "
+               f"({len(urls)} URL-e, {len(teksty)} tekstów, {len(obrazy)} obrazów) —"
+               " pobieram i porównuję z Twoimi kampaniami...")
+    wyniki = []
+    calkowito = len(urls) + len(teksty) + len(obrazy)
+    progres = st.progress(0.0, text="Pobieram materiały...")
+    nr = 0
+    for url in urls:
+        nr += 1
+        try:
+            mat, nf = szukacz.fetch_candidate(url, f"W{nr:03d}")
+            best_cid, best, top = assign_new_material(features, clusters, nf, cfg)
+            wyniki.append({"co": url, "mat": mat, "nf": nf,
+                           "kampania": best_cid, "best": best, "top": top})
+        except Exception:
+            st.caption(f"↳ pomijam (strona niedostępna): {url}")
+        progres.progress(nr / (calkowito + 1), text=f"Porównano {nr}/{calkowito}")
+    for tekst in teksty:
+        nr += 1
+        mat = Material(id=f"W{nr:03d}", source="bulk-text", text=tekst)
+        nf = extract_features(mat)
+        best_cid, best, top = assign_new_material(features, clusters, nf, cfg)
+        wyniki.append({"co": tekst[:60] + ("…" if len(tekst) > 60 else ""),
+                       "mat": mat, "nf": nf,
+                       "kampania": best_cid, "best": best, "top": top})
+        progres.progress(nr / (calkowito + 1), text=f"Porównano {nr}/{calkowito}")
+    for img in obrazy:
+        nr += 1
+        try:
+            ip = str(ROOT / "data" / "ads" / f"bulk_{nr}.png")
+            Path(ip).parent.mkdir(parents=True, exist_ok=True)
+            Path(ip).write_bytes(img.getvalue())
+            from kolekcjoner.ingest import from_screenshot
+            mat = from_screenshot(ip, f"W{nr:03d}", text=None)
+            nf = extract_features(mat)
+            best_cid, best, top = assign_new_material(features, clusters, nf, cfg)
+            wyniki.append({"co": f"🖼️ {img.name}", "mat": mat, "nf": nf,
+                           "kampania": best_cid, "best": best, "top": top})
+        except Exception:
+            st.caption(f"↳ pomijam (obraz niedostępny): {img.name}")
+        progres.progress(nr / (calkowito + 1), text=f"Porównano {nr}/{calkowito}")
+    progres.empty()
+    st.session_state["bulk_wyniki"] = wyniki
+    if not wyniki:
+        st.info("Żaden materiał nie dał się pobrać. To normalne przy krótko "
+                "żyjących domenach — spróbuj innych adresów lub dodaj teksty.")
+
+if st.session_state.get("bulk_wyniki"):
+    wyniki = st.session_state["bulk_wyniki"]
+    trafione = [w for w in wyniki if w["kampania"]]
+    nowe = [w for w in wyniki if not w["kampania"]]
+
+    if wyniki:
+        podsumowanie = ", ".join(
+            f"{k}: {sum(1 for w in trafione if w['kampania'] == k)} szt."
+            for k in dict.fromkeys(w["kampania"] for w in trafione))
+        st.markdown(
+            f"""**Podsumowanie:** {len(trafione)} z {len(wyniki)} materiałów
+pasuje do Twoich kampanii{(' — ' + podsumowanie) if podsumowanie else ''};
+{'wszystkie pozostałe to prawdopodobnie **nowe kampanie**' if nowe
+else 'żadnych nowych kampanii'}.""")
+        for w in wyniki:
+            if w["kampania"]:
+                b = w["best"]
+                strong = "".join(f"<div>⚡ {ui.friendly_strong(s)}</div>"
+                                 for s in b.strong_signals)
+                powody = "".join(f"<div>• {ui.friendly_reason(e)}</div>"
+                                 for e in sorted(b.reasons,
+                                                 key=lambda x: -x.score)[:3])
+                st.markdown(
+                    f'<div class="kf-verdict"><h4>🔗 {w["co"]}</h4>'
+                    f'<div class="why">Pasuje do kampanii <b>{w["kampania"]}'
+                    f'</b> (najbliższy materiał: {b.b}, podobieństwo '
+                    f'<b>{ui.pct(b.score)}</b>)'
+                    + ui.bar_html(b.score) + strong + powody
+                    + "</div></div>", unsafe_allow_html=True)
+            else:
+                naj = (f"Najbliżej mu `{w['top'][0].b}` "
+                       f"({ui.pct(w['top'][0].score)} — poniżej progu)."
+                       if w["top"] else "Brak porównywalnych danych.")
+                st.markdown(
+                    f'<div class="kf-verdict new"><h4>🆕 {w["co"]}</h4>'
+                    f'<div class="why">Nowa kampania — nie łączymy na siłę. '
+                    f'{naj}</div></div>', unsafe_allow_html=True)
+
+    kol1, kol2 = st.columns(2)
+    if kol1.button(f"➕ Dodaj wszystkie ({len(wyniki)}) do zbioru"):
+        for w in st.session_state.pop("bulk_wyniki"):
+            w["mat"].id = f"M{len(st.session_state.materials) + 1:03d}"
+            ui.add_material(w["mat"])
+        st.toast(f"Dodano {len(wyniki)} materiałów! Zobacz je w Kampaniach "
+                 "i na Mapie.")
+        st.rerun()
+    if kol2.button("🗑️ Odrzuć wyniki listy"):
+        st.session_state.pop("bulk_wyniki")
         st.rerun()
