@@ -225,29 +225,57 @@ def render_graph(graph, mode: str = "hub"):
 
 def render_campaigns(graph, store):
     inc_feats = store.load_incidents()
-    for c in graph["clusters"]:
-        with st.expander(f"{c['cluster_id']} — {len(c['members'])} materiałów | "
-                         f"{c['label'][:110]}", expanded=True):
-            st.write(f"**Członkowie:** {', '.join(c['members'])}")
-            st.write(f"**Uzasadnienie:** {c['summary']}")
-            st.write(f"Krawędzi: {c['n_edges']}, twarde: {c['hard_links']}, "
-                     f"średnie podobieństwo: {c['mean_score']}")
-            if c.get("first_seen"):
-                st.write(f"Aktywność: {c['first_seen']} → {c.get('last_seen')}")
-            pats = {}
-            for f in inc_feats:
-                if f["id"] in c["members"]:
-                    for d in f["infra"].get("domain_patterns", []):
-                        pats.setdefault(d["pattern"], set()).add(d["domain"])
-            if pats:
-                st.write("**Wzorce nazw domen:**")
-                for p, doms in sorted(pats.items()):
-                    st.write(f"• `{p}` → {', '.join(sorted(doms))}")
-            names = [set(f.get("faces", {}).get("known_names") or [])
-                     for f in inc_feats if f["id"] in c["members"]]
-            shared = set.intersection(*names) if len(names) > 1 else (names[0] if names else set())
-            if shared:
-                st.write(f"**Wizerunki osób:** {', '.join(sorted(shared))}")
+    clusters = graph["clusters"]
+    big = sorted((c for c in clusters if len(c["members"]) >= 3),
+                 key=lambda c: -len(c["members"]))
+    pairs = sorted((c for c in clusters if len(c["members"]) == 2),
+                   key=lambda c: c["cluster_id"])
+    n_single = sum(1 for c in clusters if len(c["members"]) == 1)
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Kampanie ≥3 materiały", len(big))
+    m2.metric("Pary wariantów", len(pairs))
+    m3.metric("Materiały pojedyncze", n_single)
+    m4.metric("Kampanie łącznie", len(clusters))
+    if big:
+        st.markdown("### Główne kampanie")
+        try:
+            import pandas as pd
+            df = pd.DataFrame([{
+                "Kampania": c["cluster_id"],
+                "Materiały": len(c["members"]),
+                "Twarde": c["hard_links"],
+                "Śr. podob.": c["mean_score"],
+                "Motyw": c["label"][:70],
+            } for c in big])
+            st.dataframe(df, hide_index=True, width="stretch")
+        except Exception:
+            for c in big:
+                st.write(f"• **{c['cluster_id']}** ({len(c['members'])}): {c['label'][:80]}")
+        for c in big:
+            with st.expander(f"{c['cluster_id']} — szczegóły", expanded=False):
+                st.write(f"**Członkowie:** {', '.join(c['members'])}")
+                st.write(f"**Przesłanki:** {c['summary']}")
+                pats = {}
+                for f in inc_feats:
+                    if f["id"] in c["members"]:
+                        for d in f["infra"].get("domain_patterns", []):
+                            pats.setdefault(d["pattern"], set()).add(d["domain"])
+                if pats:
+                    st.write("**Wzorce nazw domen:**")
+                    for p, doms in sorted(pats.items()):
+                        st.write(f"• `{p}` → {', '.join(sorted(doms))}")
+                names = [set(f.get("faces", {}).get("known_names") or [])
+                         for f in inc_feats if f["id"] in c["members"]]
+                shared = set.intersection(*names) if len(names) > 1 else (names[0] if names else set())
+                if shared:
+                    st.write(f"**Wizerunki osób:** {', '.join(sorted(shared))}")
+    if pairs:
+        with st.expander(f"Pary wariantów ({len(pairs)}) — materiały niemal identyczne",
+                         expanded=False):
+            for c in pairs:
+                st.write(f"• **{c['cluster_id']}**: {', '.join(c['members'])} — {c['label'][:80]}")
+    if not big and not pairs:
+        st.info("Brak powiązanych materiałów w zbiorze.")
 
 
 def render_pair_analyzer(graph, store):

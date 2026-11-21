@@ -13,15 +13,21 @@ guide_box([
 
 graph = st.session_state.get("graph")
 if graph:
+    edges = graph["edges"]
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Incydenty", len(graph["nodes"]))
-    m2.metric("Powiązania (krawędzie)", len(graph["edges"]))
+    m1.metric("Materiały", len(graph["nodes"]))
+    m2.metric("Powiązania", len(edges))
     m3.metric("Kampanie", len(graph["clusters"]))
-    m4.metric("Twarde powiązania", sum(1 for e in graph["edges"] if e["hard"]))
-    multi = [c for c in graph["clusters"] if len(c["members"]) > 1]
-    st.markdown("**Kampanie wieloelementowe:**")
-    for c in multi:
-        st.write(f"• **{c['cluster_id']}**: {', '.join(c['members'])} — {c['label'][:90]}")
+    m4.metric("Twarde powiązania", sum(1 for e in edges if e["hard"]))
+    big = sorted((c for c in graph["clusters"] if len(c["members"]) >= 3),
+                 key=lambda c: -len(c["members"]))
+    if big:
+        st.markdown("**Największe kampanie:**")
+        for c in big[:6]:
+            st.write(f"• **{c['cluster_id']}** — {len(c['members'])} materiałów · {c['label'][:70]}")
+        st.caption("Pełny przegląd i szczegóły: strona **Kampanie**.")
+    else:
+        st.info("Brak kampanii wieloelementowych — uruchom analizę.")
 else:
     st.info("Brak wyników. Uruchom analizę w panelu bocznym (▶ Uruchom analizę) "
             "albo wczytaj zapisane wyniki.")
