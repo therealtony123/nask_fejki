@@ -68,25 +68,57 @@ def render_graph(graph):
     try:
         from pyvis.network import Network
         net = Network(height="600px", width="100%", bgcolor="#0e1117",
-                      font_color="#fafafa", directed=False)
+                      font_color="#fafafa", directed=False, cdn_resources="in_line")
         palette = ["#ff4b4b", "#4bb3ff", "#ffd34b", "#4bff8c", "#c44bff", "#ff9d4b",
                    "#4bffd3", "#ff4bd3", "#8cff4b", "#4b8cff"]
         colors = {}
         for i, c in enumerate(graph["clusters"]):
             for m in c["members"]:
                 colors[m] = palette[i % len(palette)]
+        from collections import Counter
+        deg = Counter()
+        for e in graph["edges"]:
+            deg[e["a"]] += 1
+            deg[e["b"]] += 1
+        max_deg = max(deg.values()) or 1
         for n in graph["nodes"]:
-            net.add_node(n["id"], label=f"{n['id']}: {n['title'][:35]}",
-                         color=colors.get(n["id"], "#666666"), title=n["title"])
+            size = 12 + 16 * (deg.get(n["id"], 0) / max_deg)
+            net.add_node(
+                n["id"], label=n["id"], shape="dot", size=size, borderWidth=1.5,
+                color={"background": colors.get(n["id"], "#555555"),
+                       "border": "#ffffff",
+                       "highlight": {"background": colors.get(n["id"], "#555555"),
+                                     "border": "#ffd34b"}},
+                font={"size": 14, "color": "#fafafa", "face": "monospace"},
+                title=(f"{n['id']}: {n['title']}<br>"
+                       f"kampania: {n.get('cluster', '—')}<br>"
+                       f"pierwsza aktywność: {n.get('first_seen', '—')}"))
         for e in graph["edges"]:
             ev = "<br>".join(e["evidence"][:4])
             net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
-                         title=f"score={e['score']:.3f}{' [TWARDE]' if e['hard'] else ''}<br>{ev}",
-                         color="#ff6b6b" if e["hard"] else "#6b8cff")
-        net.set_options("""{"physics": {"barnesHut": {"gravitationalConstant": -4000}}}""")
+                         title=(f"{e['a']} ↔ {e['b']} — score={e['score']:.3f}"
+                                f"{' [TWARDE]' if e['hard'] else ''}<br>{ev}"),
+                         color="#ff6b6b" if e["hard"] else "#5b7bd5",
+                         width=1 + 4 * e["score"])
+        net.set_options(
+            """{"physics": {"barnesHut": {"gravitationalConstant": -3000,
+                                           "springLength": 140,
+                                           "damping": 0.09}},
+                "nodes": {"shadow": {"enabled": true, "size": 6,
+                                     "color": "rgba(255,255,255,0.25)"}}}""")
         net.write_html("/tmp/kfk_graph.html")
         st.components.v1.html(Path("/tmp/kfk_graph.html").read_text(encoding="utf-8"),
                               height=640, scrolling=True)
+        # legenda klastrów (tylko kampanie wieloelementowe)
+        big = [c for c in graph["clusters"] if len(c["members"]) > 1]
+        if big:
+            cols = st.columns(min(3, len(big)))
+            for i, c in enumerate(big):
+                with cols[i % len(cols)]:
+                    st.markdown(
+                        f"<span style='color:{colors[c['members'][0]]}'>●</span> "
+                        f"**{c['cluster_id']}**: {', '.join(c['members'][:8])}",
+                        unsafe_allow_html=True)
     except Exception as e:
         st.warning(f"Widok grafu niedostępny (pyvis): {e}")
 
