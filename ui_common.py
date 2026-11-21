@@ -302,11 +302,16 @@ def render_graph(graph, mode: str = "hub"):
   }
   window.kfClose = function () { panel.style.display = "none"; last = null; };
   network.on("click", function (p) {
-    var ev = p.event || {}, x = (ev.clientX || 200) + 18, y = (ev.clientY || 160) + 14;
+    var px = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.x : 200;
+    var py = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.y : 160;
+    var x = px + 18, y = py + 14;
     if (p.nodes.length) { show(D[p.nodes[0]] || "", "n:" + p.nodes[0], x, y); }
-    else if (p.edges.length && p.nodes.length === 2) {
-      var k1 = p.nodes[0] + "|" + p.nodes[1], k2 = p.nodes[1] + "|" + p.nodes[0];
-      show(E[k1] || E[k2] || "", "e:" + k1, x, y);
+    else if (p.edges.length) {
+      var ed = network.body.data.edges.get(p.edges[0]);
+      if (ed) {
+        var k1 = ed.from + "|" + ed.to, k2 = ed.to + "|" + ed.from;
+        show(E[k1] || E[k2] || "", "e:" + k1, x, y);
+      }
     } else { panel.style.display = "none"; last = null; }
   });
 })();
