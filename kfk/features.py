@@ -378,6 +378,9 @@ def extract_incident(inc: dict) -> dict:
             "colors": dominant_colors(ip),
             "top": ip.parent == base,
         })
+    # wizerunki osób — detekcja twarzy + identyfikacja względem bazy referencyjnej
+    from .faces import extract_incident_faces
+    feats["faces"] = extract_incident_faces([str(p) for p in inc["images"]])
     # OCR na wybranych zrzutach ekranu (max 3)
     ocr_imgs = [i for i in inc["images"] if "zrzut" in i.name.lower() or "screen" in i.name.lower()
                 or i.parent == base][:3]
@@ -432,6 +435,7 @@ def extract_from_url_text(url: str, html: str, redirects: list) -> dict:
                  "body": h["body"], "meta_desc": h["meta_desc"], "ocr": ""},
         "images": [],
         "videos": [],
+        "faces": {"persons": [], "known_names": [], "unknown_embs": []},
         "infra": {"domains": [], "registrable": [], "tracker_ids": h["tracker_ids"],
                   "tracker_services": [], "redirects": list(redirects), "urls": [url]},
         "structure": {"css_classes": h["css_classes"], "scripts": h["scripts"],

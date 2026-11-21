@@ -1,0 +1,100 @@
+[
+  {
+    "slug": "donald_tusk",
+    "name": "Donald Tusk",
+    "photo": "donald_tusk.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Donald_Tusk",
+    "license": "CC BY 3.0 pl"
+  },
+  {
+    "slug": "mateusz_morawiecki",
+    "name": "Mateusz Morawiecki",
+    "photo": "mateusz_morawiecki.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Mateusz_Morawiecki",
+    "license": "CC0"
+  },
+  {
+    "slug": "andrzej_duda",
+    "name": "Andrzej Duda",
+    "photo": "andrzej_duda.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Andrzej_Duda",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "slug": "jaroslaw_kaczynski",
+    "name": "Jarosław Kaczyński",
+    "photo": "jaroslaw_kaczynski.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Jarosław_Kaczyński",
+    "license": "CC BY 3.0 pl"
+  },
+  {
+    "slug": "szymon_holownia",
+    "name": "Szymon Hołownia",
+    "photo": "szymon_holownia.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Szymon_Hołownia",
+    "license": "CC BY-SA 3.0 pl"
+  },
+  {
+    "slug": "rafal_brzoska",
+    "name": "Rafał Brzoska",
+    "photo": "rafal_brzoska.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Rafał_Brzoska",
+    "license": "CC0"
+  },
+  {
+    "slug": "monika_olejnik",
+    "name": "Monika Olejnik",
+    "photo": "monika_olejnik.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Monika_Olejnik",
+    "license": "CC BY-SA 2.0"
+  },
+  {
+    "slug": "robert_lewandowski",
+    "name": "Robert Lewandowski",
+    "photo": "robert_lewandowski.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Robert_Lewandowski",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "slug": "kuba_wojewodzki",
+    "name": "Kuba Wojewódzki",
+    "photo": "kuba_wojewodzki.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Kuba_Wojewódzki",
+    "license": "CC BY-SA 2.0"
+  },
+  {
+    "slug": "krzysztof_ibisz",
+    "name": "Krzysztof Ibisz",
+    "photo": "krzysztof_ibisz.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Krzysztof_Ibisz",
+    "license": "CC BY 4.0"
+  },
+  {
+    "slug": "elon_musk",
+    "name": "Elon Musk",
+    "photo": "elon_musk.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Elon_Musk",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "slug": "donald_trump",
+    "name": "Donald Trump",
+    "photo": "donald_trump.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Donald_Trump",
+    "license": "Public domain"
+  },
+  {
+    "slug": "jeff_bezos",
+    "name": "Jeff Bezos",
+    "photo": "jeff_bezos.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Jeff_Bezos",
+    "license": "Public domain"
+  },
+  {
+    "slug": "bill_gates",
+    "name": "Bill Gates",
+    "photo": "bill_gates.jpg",
+    "source": "https://pl.wikipedia.org/wiki/Bill_Gates",
+    "license": "CC BY 4.0"
+  }
+]

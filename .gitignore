@@ -9,3 +9,4 @@ data/
 .DS_Store
 *.ioc.csv
 *.stix.json
+kfk/faces_ref/embeddings.json

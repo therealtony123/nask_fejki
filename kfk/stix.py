@@ -80,6 +80,8 @@ def build_bundle(incidents: list, clusters: list, edges: list) -> dict:
             "x_kfk_tracker_ids": f["infra"]["tracker_ids"],
             "x_kfk_domain_patterns": [f"{d['domain']} [{d['pattern']}]"
                                       for d in f["infra"].get("domain_patterns", [])],
+            "x_kfk_faces": [f"{p['name']} ({p['score']})"
+                            for p in f.get("faces", {}).get("persons", [])],
             "x_kfk_cluster": cluster_of.get(f["id"]),
         }))
         if f["id"] in cluster_of:

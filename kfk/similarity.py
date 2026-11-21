@@ -16,6 +16,7 @@ VIEW_WEIGHTS = {
     "trackers": 0.30,   # te same identyfikatory analityki (GA/Pixel/GTM) — bardzo silny sygnał
     "structure": 0.10,  # wspólny szablon HTML (klasy CSS, skrypty, favicon)
     "domain_pattern": 0.08,  # wspólny wzorzec nazw domen (TLD + schemat nazewniczy)
+    "faces": 0.30,      # te same wizerunki osób (baza referencyjna / embeddingi twarzy)
 }
 EDGE_THRESHOLD = 0.25       # próg tworzenia krawędzi
 PHASH_MAX_DIST = 12
@@ -165,6 +166,17 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
             )
         else:
             views["domain_pattern"] = (0.0, [])
+    # 8. wizerunki osób — wspólne osoby z bazy lub ta sama nieznana twarz
+    from .faces import face_similarity
+    fa_f, fb_f = fa.get("faces"), fb.get("faces")
+    if (fa_f and fb_f and
+            (fa_f.get("known_names") or fa_f.get("unknown_embs")) and
+            (fb_f.get("known_names") or fb_f.get("unknown_embs"))):
+        s, ev = face_similarity(fa, fb)
+        if s > 0:
+            views["faces"] = (s, ev)
+        else:
+            views["faces"] = (0.0, [])
     # twarde przesłanki
     hard = []
     if ta and tb and ta == tb:
@@ -173,6 +185,8 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
         hard.append("te same ID analityki")
     if "images" in views and views["images"][0] >= 0.5:
         hard.append("warianty graficzne")
+    if "faces" in views and views["faces"][0] >= 1.0:
+        hard.append("ta sama osoba")
     return views, hard
 
 
@@ -195,6 +209,8 @@ def negative_evidence(fa: dict, fb: dict, tfidf: Tfidf) -> list:
         neg.append("różne szablony HTML (rozłączne klasy CSS)")
     if "domain_pattern" in views and views["domain_pattern"][0] == 0:
         neg.append("różne wzorce nazw domen (inne TLD/schematy nazewnicze)")
+    if "faces" in views and views["faces"][0] == 0:
+        neg.append("brak wspólnych wizerunków osób")
     return neg
 
 

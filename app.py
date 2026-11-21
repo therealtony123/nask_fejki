@@ -156,6 +156,15 @@ if "graph" in st.session_state:
                     st.write("**Wzorce nazw domen:**")
                     for p, doms in sorted(pats.items()):
                         st.write(f"• `{p}` → {', '.join(sorted(doms))}")
+                names_by_inc = {}
+                for f in inc_feats:
+                    if f["id"] in c["members"]:
+                        names_by_inc[f["id"]] = set(f.get("faces", {}).get("known_names") or [])
+                vals = list(names_by_inc.values())
+                if vals:
+                    shared_names = set.intersection(*vals) if len(vals) > 1 else vals[0]
+                    if shared_names:
+                        st.write(f"**Wizerunki osób:** {', '.join(sorted(shared_names))}")
 
     with tab_kamp:
         sel = st.selectbox("Kampania", [c["cluster_id"] for c in graph["clusters"]])
@@ -214,6 +223,10 @@ if "graph" in st.session_state:
             st.markdown(f"**Plików:** {f['n_files']}, **obrazów:** {len(f['images'])}")
             st.markdown(f"**Domeny:** {', '.join(f['infra']['registrable']) or '(brak)'}")
             st.markdown(f"**Trackery:** {', '.join(f['infra']['tracker_ids']) or '(brak)'}")
+            faces = f.get("faces", {})
+            if faces.get("persons"):
+                st.markdown("**Wizerunki osób:** " + ", ".join(
+                    f"{p['name']} (dopasowanie {p['score']})" for p in faces["persons"]))
             if f["text"].get("ocr"):
                 st.markdown(f"**OCR (zrzut ekranu):** _{f['text']['ocr'][:400]}_")
         with c2:

@@ -8,3 +8,5 @@ beautifulsoup4>=4.12
 lxml>=5.1
 pytesseract>=0.3.10
 pyvis>=0.3.2
+opencv-contrib-python-headless>=4.10
+
