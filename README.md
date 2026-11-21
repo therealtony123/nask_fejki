@@ -145,6 +145,9 @@ mkdir -p tessdata && curl -sL -o tessdata/pol.traineddata \
 # pipeline (CLI):
 TESSDATA_PREFIX="$PWD/tessdata" .venv/bin/python pipeline.py data --db kfk.sqlite
 
+# modele twarzy (YuNet+SFace) — jeśli nie ma ich w kfk/models/:
+bash scripts/download_models.sh
+
 # demonstrator:
 TESSDATA_PREFIX="$PWD/tessdata" .venv/bin/streamlit run app.py
 ```
