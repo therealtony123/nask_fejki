@@ -22,7 +22,7 @@ if not GRAPH.is_file():
     raise SystemExit(f"Brak {GRAPH} — najpierw uruchom pipeline.py")
 
 graph = json.loads(GRAPH.read_text(encoding="utf-8"))
-net = Network(height="720px", width="100%", bgcolor="#0e1117",
+net = Network(height="720px", width="100%", bgcolor="#000000",
               font_color="#fafafa", directed=False, cdn_resources="in_line")
 palette = ["#ff4b4b", "#4bb3ff", "#ffd34b", "#4bff8c", "#c44bff", "#ff9d4b",
            "#4bffd3", "#ff4bd3", "#8cff4b", "#4b8cff"]
@@ -33,8 +33,8 @@ for i, c in enumerate(graph["clusters"]):
 
 
 def _tt_card(inner: str, min_w: int = 280) -> str:
-    return (f"<div style='min-width:{min_w}px;max-width:440px;background:#0c1220;"
-            f"border:1px solid #223047;border-radius:6px;padding:10px 12px;"
+    return (f"<div style='min-width:{min_w}px;max-width:440px;background:#000000;"
+            f"border:1px solid #2b2b2b;border-radius:6px;padding:10px 12px;"
             f"font:12.5px/1.6 Consolas,monospace;color:#cdd7e0'>{inner}</div>")
 
 deg = Counter()

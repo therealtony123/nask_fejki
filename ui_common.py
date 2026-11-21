@@ -75,8 +75,8 @@ def run_analysis(data, db, threshold):
 
 
 def _tt_card(inner: str, min_w: int = 280) -> str:
-    return (f"<div style='min-width:{min_w}px;max-width:440px;background:#0c1220;"
-            f"border:1px solid #223047;border-radius:6px;padding:10px 12px;"
+    return (f"<div style='min-width:{min_w}px;max-width:440px;background:#000000;"
+            f"border:1px solid #2b2b2b;border-radius:6px;padding:10px 12px;"
             f"font:12.5px/1.6 Consolas,monospace;color:#cdd7e0'>{inner}</div>")
 
 
@@ -135,6 +135,17 @@ def _tt_node(n: dict, deg_n: int) -> str:
     return _tt_card(inner)
 
 
+def _tt_short(n: dict, deg_n: int) -> str:
+    """Kompaktowy podgląd przy najechaniu — pełne szczegóły po kliknięciu."""
+    t = (n.get("title") or "").strip()[:58]
+    return _tt_card(
+        f"<div style='font-size:13px;font-weight:bold;color:#00ff9c'>{n['id']} · "
+        f"KAMPANIA {n.get('cluster') or '—'}</div>"
+        f"<div style='margin-top:3px;color:#9aa7b4'>{t or '—'}</div>"
+        f"<div style='margin-top:4px;color:#5b7bd5;font-size:11px'>"
+        f"powiązań: {deg_n} · kliknij — pełne szczegóły</div>", 240)
+
+
 def render_graph(graph, mode: str = "hub"):
     """Graf kampanii.
 
@@ -144,7 +155,7 @@ def render_graph(graph, mode: str = "hub"):
     """
     try:
         from pyvis.network import Network
-        net = Network(height="600px", width="100%", bgcolor="#0e1117",
+        net = Network(height="600px", width="100%", bgcolor="#000000",
                       font_color="#fafafa", directed=False, cdn_resources="in_line")
         palette = ["#ff4b4b", "#4bb3ff", "#ffd34b", "#4bff8c", "#c44bff", "#ff9d4b",
                    "#4bffd3", "#ff4bd3", "#8cff4b", "#4b8cff"]
@@ -157,6 +168,8 @@ def render_graph(graph, mode: str = "hub"):
             deg[e["a"]] += 1
             deg[e["b"]] += 1
         max_deg = max(deg.values()) or 1
+        detail = {}   # pełne szczegóły węzłów (panel po kliknięciu)
+        edetail = {}  # pełne szczegóły krawędzi (panel po kliknięciu)
         hidden = 0
         for n in graph["nodes"]:
             if deg.get(n["id"], 0) == 0:
@@ -170,14 +183,15 @@ def render_graph(graph, mode: str = "hub"):
                        "highlight": {"background": colors.get(n["id"], "#555555"),
                                      "border": "#ffd34b"}},
                 font={"size": 15, "color": "#fafafa", "face": "monospace"},
-                title=_tt_node(n, deg.get(n["id"], 0)))
+                title=_tt_short(n, deg.get(n["id"], 0)))
+            detail[n["id"]] = _tt_node(n, deg.get(n["id"], 0))
         if mode == "hub":
             for c in graph["clusters"]:
                 members = [m for m in c["members"] if deg.get(m, 0) > 0]
                 if len(members) < 2:
                     continue
                 col = colors.get(members[0], "#4bb3ff")
-                hub_title = _tt_card(
+                hub_full = _tt_card(
                     f"<div style='font-size:16px;font-weight:bold;color:{col}'>"
                     f"{c['cluster_id']} — KAMPANIA · {len(members)} materiałów</div>"
                     f"<div style='margin:5px 0;color:#e6edf3'>{c['label'][:160]}</div>"
@@ -185,13 +199,20 @@ def render_graph(graph, mode: str = "hub"):
                     f"{', '.join(members[:12])}</div>"
                     f"<div style='margin-top:8px;color:#5b7bd5'>średnie podobieństwo "
                     f"{c['mean_score']} · twarde powiązania: {c['hard_links']}</div>")
+                hub_short = _tt_card(
+                    f"<div style='font-size:14px;font-weight:bold;color:{col}'>"
+                    f"{c['cluster_id']} — KAMPANIA · {len(members)} materiałów</div>"
+                    f"<div style='margin-top:3px;color:#9aa7b4'>{c['label'][:70] or '—'}</div>"
+                    f"<div style='margin-top:4px;color:#5b7bd5;font-size:11px'>"
+                    f"kliknij — pełne szczegóły</div>", 260)
                 net.add_node(
                     c["cluster_id"], label=c["cluster_id"], shape="box",
                     size=22 + 6 * len(members), borderWidth=2, mass=2 + 2 * len(members),
-                    color={"background": "#0c1220", "border": col,
-                           "highlight": {"background": "#122033", "border": "#ffd34b"}},
+                    color={"background": "#000000", "border": col,
+                           "highlight": {"background": "#111111", "border": "#ffd34b"}},
                     font={"size": 18, "color": col, "face": "monospace"},
-                    title=hub_title)
+                    title=hub_short)
+                detail[c["cluster_id"]] = hub_full
                 for m in members:
                     best = None
                     for e in graph["edges"]:
@@ -206,30 +227,45 @@ def render_graph(graph, mode: str = "hub"):
                     other = best["b"] if best["a"] == m else best["a"]
                     ev = "".join(f"<div style='margin-top:4px'>• {x}</div>"
                                  for x in best["evidence"][:4])
+                    edge_full = _tt_card(
+                        f"<div style='font-size:13px;font-weight:bold;"
+                        f"color:{'#ff6b6b' if best['hard'] else '#5b7bd5'}'>"
+                        f"{m} ↔ {other} · score {best['score']:.3f}"
+                        f"{' · TWARDE' if best['hard'] else ''}</div>{ev}")
                     net.add_edge(
                         c["cluster_id"], m, value=round(best["score"] * 10, 1),
                         width=1 + 4 * best["score"],
                         color="#ff6b6b" if best["hard"] else "#5b7bd5",
                         title=_tt_card(
-                            f"<div style='font-size:13px;font-weight:bold;"
+                            f"<div style='font-size:12px;font-weight:bold;"
                             f"color:{'#ff6b6b' if best['hard'] else '#5b7bd5'}'>"
                             f"{m} ↔ {other} · score {best['score']:.3f}"
-                            f"{' · TWARDE' if best['hard'] else ''}</div>{ev}"))
+                            f"{' · TWARDE' if best['hard'] else ''}</div>"
+                            f"<div style='margin-top:3px;color:#9aa7b4;font-size:11px'>"
+                            f"kliknij — przesłanki</div>", 230))
+                    edetail[f"{c['cluster_id']}|{m}"] = edge_full
         else:
             for e in graph["edges"]:
                 if deg.get(e["a"], 0) == 0 or deg.get(e["b"], 0) == 0:
                     continue
-                ev = "<br>".join(e["evidence"][:4])
+                ev = "".join(f"<div style='margin-top:4px'>• {x}</div>"
+                             for x in e["evidence"][:4])
+                edge_full = _tt_card(
+                    f"<div style='font-size:13px;font-weight:bold;"
+                    f"color:{'#ff6b6b' if e['hard'] else '#5b7bd5'}'>"
+                    f"{e['a']} ↔ {e['b']} · score {e['score']:.3f}"
+                    f"{' · TWARDE' if e['hard'] else ''}</div>{ev}")
                 net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
                              title=_tt_card(
-                                 f"<div style='font-size:13px;font-weight:bold;"
+                                 f"<div style='font-size:12px;font-weight:bold;"
                                  f"color:{'#ff6b6b' if e['hard'] else '#5b7bd5'}'>"
                                  f"{e['a']} ↔ {e['b']} · score {e['score']:.3f}"
                                  f"{' · TWARDE' if e['hard'] else ''}</div>"
-                                 + "".join(f"<div style='margin-top:4px'>• {x}</div>"
-                                           for x in e["evidence"][:4])),
+                                 f"<div style='margin-top:3px;color:#9aa7b4;font-size:11px'>"
+                                 f"kliknij — przesłanki</div>", 230),
                              color="#ff6b6b" if e["hard"] else "#5b7bd5",
                              width=1 + 4 * e["score"])
+                edetail[f"{e['a']}|{e['b']}"] = edge_full
         net.set_options(
             """{"physics": {"barnesHut": {"gravitationalConstant": -3000,
                                            "springLength": 140,
@@ -237,12 +273,43 @@ def render_graph(graph, mode: str = "hub"):
                 "nodes": {"shadow": {"enabled": true, "size": 6,
                                      "color": "rgba(255,255,255,0.25)"}}}""")
         net.write_html("/tmp/kfk_graph.html")
-        st.components.v1.html(Path("/tmp/kfk_graph.html").read_text(encoding="utf-8"),
-                              height=640, scrolling=True)
+        # panel szczegółów po kliknięciu (zwijany) + czarna skórka
+        import json as _json
+        _panel_css = ("position:fixed;top:70px;right:16px;z-index:9999;"
+                      "max-width:400px;max-height:72vh;overflow:auto;"
+                      "background:#000000;border:1px solid #00ff9c;border-radius:8px;"
+                      "padding:12px 14px;display:none;"
+                      "font:12.5px/1.6 Consolas,monospace;color:#cdd7e0;"
+                      "box-shadow:0 0 24px rgba(0,255,156,.25)")
+        js = """<div id="kf-panel" style="%s"></div>
+<script>
+(function () {
+  var D = %s, E = %s, panel = document.getElementById("kf-panel"), last = null;
+  function show(html, key) {
+    if (last === key) { panel.style.display = "none"; last = null; return; }
+    panel.innerHTML = html +
+      "<div style='margin-top:10px;text-align:right;color:#00ff9c;cursor:pointer' " +
+      "onclick='window.kfClose()'>✕ zamknij</div>";
+    panel.style.display = "block"; last = key;
+  }
+  window.kfClose = function () { panel.style.display = "none"; last = null; };
+  network.on("click", function (p) {
+    if (p.nodes.length) { show(D[p.nodes[0]] || "", "n:" + p.nodes[0]); }
+    else if (p.edges.length && p.nodes.length === 2) {
+      var k1 = p.nodes[0] + "|" + p.nodes[1], k2 = p.nodes[1] + "|" + p.nodes[0];
+      show(E[k1] || E[k2] || "", "e:" + k1);
+    } else { panel.style.display = "none"; last = null; }
+  });
+})();
+</script>""" % (_panel_css, _json.dumps(detail, ensure_ascii=False),
+        _json.dumps(edetail, ensure_ascii=False))
+        html = Path("/tmp/kfk_graph.html").read_text(encoding="utf-8")
+        html = html.replace("</body>", js + "</body>")
+        st.components.v1.html(html, height=640, scrolling=True)
         if mode == "hub":
-            st.caption("Kwadraty = kampanie (hub). Szprychy łączą kampanię z jej "
-                       "materiałami — najedź na szprychę, aby zobaczyć najsilniejsze "
-                       "przesłanki. Przełącznikiem wrócisz do pełnego grafu krawędzi.")
+            st.caption("Kwadraty = kampanie (hub), kółka = materiały. Najedź — skrót; "
+                       "**kliknij węzeł lub szprychę** — zwijany panel z pełnymi "
+                       "szczegółami (✕ zamyka).")
         if hidden:
             st.caption(f"Ukryto {hidden} pojedynczych materiałów bez powiązań "
                        "(pełna lista na stronie Incydenty).")
