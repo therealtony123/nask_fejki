@@ -266,6 +266,7 @@ def registrable(host: str) -> str:
 
 # platformy/CDN/ad-tech — ich wzorce nazw nie mówią nic o operatorze kampanii
 KNOWN_PLATFORMS = {"facebook.com", "facebook.net", "google.com", "google.pl",
+                   "fb.com", "fb.watch", "instagram.com",
                    "googleapis.com", "gstatic.com", "doubleclick.net",
                    "googletagmanager.com", "jsdelivr.net", "cloudflare.com",
                    "unpkg.com", "jquery.com", "unsplash.com", "netlify.app",
@@ -404,7 +405,8 @@ def extract_incident(inc: dict) -> dict:
                                             "uploader", "webpage_url") if k in jd},
         })
     # finalne porządki
-    feats["infra"]["domains"] = sorted(set(d.lower() for d in feats["infra"]["domains"]))
+    feats["infra"]["domains"] = sorted({d.lower() for d in feats["infra"]["domains"]
+                                        if registrable(d) not in KNOWN_PLATFORMS})
     feats["infra"]["registrable"] = sorted({registrable(d) for d in feats["infra"]["domains"]})
     feats["infra"]["domain_patterns"] = domain_patterns(feats["infra"]["registrable"])
     feats["infra"]["tracker_ids"] = sorted(set(feats["infra"]["tracker_ids"]))
@@ -440,7 +442,7 @@ def extract_from_url_text(url: str, html: str, redirects: list) -> dict:
         m = re.match(r"https?://([^/]+)", u)
         if m:
             doms.add(m.group(1).lower())
-    feats["infra"]["domains"] = sorted(doms)
+    feats["infra"]["domains"] = sorted({d for d in doms if registrable(d) not in KNOWN_PLATFORMS})
     feats["infra"]["registrable"] = sorted({registrable(d) for d in doms})
     feats["infra"]["domain_patterns"] = domain_patterns(feats["infra"]["registrable"])
     feats["text"]["body_norm"] = norm_text(h["body"])

@@ -31,8 +31,15 @@ def cluster_graph(incident_ids: list, edges: list, min_score: float = 0.25):
         if n not in covered:
             communities.append({n})
 
+    # stabilne nazwy kampanii: kotwica = najmniejszy oryginalny incydent w klastrze
+    def anchor(ms):
+        nums = sorted((m for m in ms if m.isdigit()), key=int)
+        return nums[0] if nums else sorted(ms)[0]
+
+    ordered = sorted(communities,
+                     key=lambda ms: (0, int(anchor(ms))) if anchor(ms).isdigit() else (1, anchor(ms)))
     clusters = []
-    for idx, members in enumerate(sorted(communities, key=len, reverse=True)):
+    for idx, members in enumerate(ordered):
         sub = G.subgraph(members)
         edges_in = list(sub.edges(data=True))
         mean_score = (sum(d["score"] for _, _, d in edges_in) / len(edges_in)) if edges_in else 0.0

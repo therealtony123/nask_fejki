@@ -54,9 +54,12 @@ Każdą parę incydentów porównuje się niezależnie w widokach:
   to bardzo silny sygnał wspólnego operatora kampanii;
 - **obrazy** (waga 0.25) — odległość Hamminga pHash ≤ 12 lub dHash ≤ 8
   oznacza duplikat/wariant graficzny;
-- **infrastruktura** (waga 0.20) — Jaccard zbioru domen rejestrowalnych;
+- **infrastruktura** (waga 0.20) — Jaccard zbioru domen rejestrowalnych
+  (z pominięciem platform/CDN — obecność FB/GA śledzą osobno widoki trackerów);
 - **treść** (waga 0.15) — cosinus TF-IDF n-gramów znakowych (2–4 znaki;
-  odporne na polską fleksję, brak zależności od języka modelu);
+  odporne na polską fleksję, brak zależności od języka modelu; aktywacja od
+  cos 0.30 przy tekstach ≥ 200 znaków — krótkie teksty reklamowe mają wysoki
+  przypadkowy overlap);
 - **struktura** (waga 0.10) — Jaccard klas CSS (wspólny szablon produkcyjny);
 - **wzorce domen** (waga 0.08) — wspólny schemat nazw domen (TLD + klasy
   nazewnicze + entropia), z pominięciem platform/CDN; słaby sygnał, liczony
@@ -77,7 +80,8 @@ ID analityki lub co najmniej połowa obrazów jest wariantami.
 Graf incydentów (węzły = incydenty, krawędzie = udokumentowane podobieństwo)
 jest dzielony algorytmem **Louvain** (community detection, `networkx`) — kampanie
 nie muszą być klikami, co pozwala łączyć łańcuchy wariantów. Każda kampania
-dostaje etykietę zbudowaną z najczęstszych przesłanek.
+dostaje **stabilny identyfikator** (kotwica = najmniejszy oryginalny incydent),
+więc nazwa kampanii nie zmienia się po dołożeniu nowych materiałów.
 
 ### 1.5 Nowy materiał vs zbiór
 
@@ -152,6 +156,20 @@ Dane montowane z `./data`, baza `./kfk.sqlite`. W obrazie jest tesseract z polsk
 modelem.
 
 Wymagania systemowe lokalnie: `tesseract-ocr` (dla OCR; opcjonalne).
+
+### Pomocnik: zbieranie reklam z Meta Ad Library (CLI)
+
+```bash
+# z tokenem Graph API (uprawnienie ads_read):
+python fb_collector.py --token TOKEN --terms "zarabiaj z domu" --run-pipeline
+# tryb offline (próbka do demo, bez tokena):
+python fb_collector.py --from-file data/meta_ads_sample.json --run-pipeline
+```
+
+Każda reklama trafia do zbioru jako incydent (`data/do_udostępnienia/ad_<ID>/`),
+pipeline przelicza kampanie, a raport wskazuje **PRZYPISANO DO KAMPANII** lub
+**NOWY WZORZEC** (próg `--join`, domyślnie 0.30). Deduplikacja po ID reklamy,
+paginacja przez `--pages`.
 
 ---
 

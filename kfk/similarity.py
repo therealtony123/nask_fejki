@@ -23,12 +23,18 @@ DHASH_MAX_DIST = 8
 
 
 class Tfidf:
-    """Lekki TF-IDF na n-gramach znakowych (odporny na polską fleksję)."""
+    """Lekki TF-IDF na n-gramach znakowych (odporny na polską fleksję).
 
-    def __init__(self, ngram_range=(2, 4), min_df=2):
+    min_df=1 + podliniowe tf (1+log) — pełny słownik z IDF tłumi n-gramy
+    wspólne (boilerplate), zamiast je wyrzucać przy małym zbiorze.
+    """
+
+    def __init__(self, ngram_range=(2, 4), min_df=1, max_len=5000):
         self.ngram_range = ngram_range
         self.min_df = min_df
+        self.max_len = max_len
         self.df = Counter()
+        self.idf = {}
 
     def _ngrams(self, s: str):
         s = re.sub(r"[^a-z0-9ąćęłńóśźż]+", "", s.lower())
@@ -41,17 +47,18 @@ class Tfidf:
         for t in texts:
             if not t:
                 continue
-            for g in set(self._ngrams(t)):
+            for g in set(self._ngrams(t[:self.max_len])):
                 self.df[g] += 1
         self.df = Counter({g: c for g, c in self.df.items() if c >= self.min_df})
+        n = len(self.df)
+        self.idf = {g: 1 + math.log((n + 1) / (c + 1)) for g, c in self.df.items()}
 
     def transform(self, text: str):
         if not text:
             return {}
-        tf = Counter(self._ngrams(text))
-        n = len(self.df)
-        vec = {g: c * (1 + math.log((n + 1) / (self.df[g] + 1)))
-               for g, c in tf.items() if g in self.df}
+        tf = Counter(self._ngrams(text[:self.max_len]))
+        vec = {g: (1 + math.log(c)) * self.idf[g]
+               for g, c in tf.items() if g in self.idf}
         norm = math.sqrt(sum(v * v for v in vec.values())) or 1.0
         return {g: v / norm for g, v in vec.items()}
 
@@ -87,12 +94,13 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
                 views["title"] = (0.9, [f"prawie identyczny tytuł (ratio {r:.2f})"])
             else:
                 views["title"] = (0.0, [])
-    # 2. tekst
+    # 2. tekst — aktywny dopiero przy dostatecznie długich tekstach i cos > 0.30
+    # (krótkie teksty reklamowe mają wysoki przypadkowy overlap n-gramów)
     ba, bb = fa["text"].get("body_norm"), fb["text"].get("body_norm")
-    if ba and bb:
+    if ba and bb and len(ba) >= 200 and len(bb) >= 200:
         c = tfidf.cosine(tfidf.transform(ba), tfidf.transform(bb))
-        if c > 0.10:
-            views["text"] = (round(min(c * 1.5, 1.0), 3),
+        if c > 0.30:
+            views["text"] = (round(min(c, 1.0), 3),
                              [f"podobieństwo treści: cos={c:.2f}"])
         else:
             views["text"] = (0.0, [])
