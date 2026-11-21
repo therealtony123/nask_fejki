@@ -288,7 +288,7 @@ def render_graph(graph, mode: str = "hub"):
                                   timeout=5).stdout.strip()
         except Exception:
             _ver = "?"
-        _panel_css = ("position:absolute;z-index:99999;"
+        _panel_css = ("position:absolute;z-index:2147483647;"
                       "max-width:400px;max-height:70vh;overflow:auto;"
                       "background:#000000;border:2px solid #00ff9c;border-radius:8px;"
                       "padding:12px 14px;display:none;"
@@ -301,10 +301,11 @@ def render_graph(graph, mode: str = "hub"):
   function show(html, key, x, y) {
     if (last === key) { panel.style.display = "none"; last = null;
       network.setOptions({physics: {enabled: true}}); return; }
-    panel.innerHTML = html +
-      "<div style='margin-top:10px;text-align:right;color:#00ff9c;cursor:pointer' " +
-      "onclick='window.kfClose()'>✕ zamknij</div>" +
-      "<div style='margin-top:8px;font-size:10px;color:#3a4a5a'>graf v" + V + "</div>";
+    panel.innerHTML =
+      "<div style='display:flex;justify-content:space-between;margin-bottom:8px'>" +
+      "<span style='font-size:11px;color:#00ff9c'>graf v" + V + "</span>" +
+      "<span style='color:#00ff9c;cursor:pointer' onclick='window.kfClose()'>✕ zamknij</span></div>" +
+      html;
     panel.style.left = Math.min(x, window.innerWidth - 430) + "px";
     panel.style.top = Math.max(8, Math.min(y, window.innerHeight - 320)) + "px";
     panel.style.display = "block"; last = key;

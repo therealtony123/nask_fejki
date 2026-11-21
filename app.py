@@ -48,6 +48,18 @@ pg = st.navigation(pages)
 # ------------------------------------------------------------- sidebar
 
 with st.sidebar:
+    try:
+        import subprocess
+        _ver = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], capture_output=True,
+            text=True, cwd=Path(__file__).parent, timeout=5).stdout.strip()
+    except Exception:
+        _ver = "?"
+    st.markdown(
+        f'<div style="font-family:Consolas,monospace;color:#00ff9c;'
+        f'border:1px solid #00ff9c;border-radius:6px;padding:6px 10px;'
+        f'margin-bottom:10px;background:#000">wersja: {_ver}</div>',
+        unsafe_allow_html=True)
     st.markdown(
         '<div class="kf-side-head">'
         '<span class="kf-side-kicker">// config</span>'
@@ -92,14 +104,5 @@ with st.sidebar:
     st.caption("Zbiór organizatora: katalog data/ (struktura do_udostępnienia/<id>/). "
                "Własne materiały zbierają: fb_collector.py (Meta Ad Library) "
                "i harvest_urls.py (OpenPhish, AA419).")
-    try:
-        import subprocess
-        ver = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"], capture_output=True,
-            text=True, cwd=Path(__file__).parent, timeout=5).stdout.strip()
-    except Exception:
-        ver = "?"
-    st.caption(f"wersja: {ver} · jeśli strona nie wygląda jak w opisie — "
-               f"odśwież ją (F5 / Ctrl+Shift+R)")
 
 pg.run()
