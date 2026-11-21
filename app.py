@@ -22,7 +22,291 @@ from kolekcjoner import (  # noqa: E402
 ROOT = Path(__file__).resolve().parent
 
 st.set_page_config(page_title="Kolekcjoner fejków", page_icon="🕵️", layout="wide")
-st.title("🕵️ Kolekcjoner fejków — korelacja podejrzanych reklam w kampanie")
+
+# ------------------------------------------------------------- skin (dark-ops)
+
+_KF_CSS = """
+<style>
+/* ===== KOLEKCJONER FEJKÓW // dark-ops skin — wszystko lokalnie ===== */
+
+@keyframes kf-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes kf-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+html, body, .stApp, .stApp [class*="css"],
+button, input, textarea, select, label, summary {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Roboto Mono',
+               'Ubuntu Mono', 'Liberation Mono', monospace !important;
+}
+
+.stApp {
+  background:
+    radial-gradient(1100px 520px at 88% -10%, rgba(0, 255, 156, .06), transparent 60%),
+    radial-gradient(900px 460px at -8% 112%, rgba(0, 217, 255, .05), transparent 60%),
+    #0a0e14 !important;
+  color: #c9d1d9;
+}
+
+/* delikatne scanlines na całym ekranie */
+.stApp::after {
+  content: "";
+  position: fixed; inset: 0; z-index: 99999; pointer-events: none;
+  background: repeating-linear-gradient(0deg,
+              rgba(0, 0, 0, .14) 0px, rgba(0, 0, 0, .14) 1px,
+              transparent 1px, transparent 3px);
+  opacity: .5;
+}
+
+::selection { background: rgba(0, 255, 156, .25); }
+* { scrollbar-color: #1c2634 #0a0e14; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0a0e14; }
+::-webkit-scrollbar-thumb { background: #1c2634; border-radius: 6px; border: 2px solid #0a0e14; }
+::-webkit-scrollbar-thumb:hover { background: #00ff9c66; }
+
+/* ---------- header ---------- */
+.kf-head {
+  position: relative; overflow: hidden;
+  border: 1px solid #1c2634; border-radius: 10px;
+  padding: 16px 22px 14px; margin-bottom: 1.1rem;
+  background: linear-gradient(180deg, rgba(0,255,156,.05), rgba(0,217,255,.02) 55%, transparent), #0c1220;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 0 34px rgba(0,255,156,.05);
+}
+.kf-head::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #00ff9c, #00d9ff 45%, transparent 80%);
+  box-shadow: 0 0 12px rgba(0,255,156,.7);
+}
+.kf-term { color: #4d5c6e; font-size: .72rem; letter-spacing: .1em; }
+.kf-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+.kf-dot.r { background: #ff5f57; } .kf-dot.y { background: #febc2e; } .kf-dot.g { background: #28c840; }
+.kf-h1 {
+  margin: .45rem 0 .15rem; font-size: 1.95rem; font-weight: 800;
+  letter-spacing: .07em; color: #e6edf3; line-height: 1.15;
+}
+.kf-h1 .acc { color: #00ff9c; text-shadow: 0 0 16px rgba(0,255,156,.55); }
+.kf-cursor { color: #00ff9c; animation: kf-blink 1.1s step-end infinite; }
+.kf-sub { color: #7d8ca1; font-size: .78rem; margin: 0; }
+.kf-sub .tag {
+  border: 1px solid #243042; border-radius: 4px; padding: 1px 7px;
+  color: #8ad8ff; background: #0a0f18; margin-left: 6px;
+}
+.kf-live { color: #ff5f57; animation: kf-pulse 1.6s ease-in-out infinite; }
+
+/* ---------- typografia sekcji ---------- */
+h2, h3, .stApp h2, .stApp h3 {
+  color: #e6edf3 !important;
+  letter-spacing: .04em;
+  border-left: 3px solid #00ff9c;
+  padding-left: 10px;
+  text-shadow: 0 0 10px rgba(0,255,156,.15);
+}
+.small-font, .stApp p, .stApp li { font-size: .9rem; }
+code { background: #0a0f18 !important; border: 1px solid #1c2634; border-radius: 4px; padding: 1px 6px; }
+blockquote { border-left: 3px solid #00d9ff; }
+
+/* ---------- sidebar ---------- */
+section[data-testid="stSidebar"] {
+  background: #0b111c !important;
+  border-right: 1px solid #16202e;
+  box-shadow: -12px 0 34px rgba(0,0,0,.45);
+}
+section[data-testid="stSidebar"] .block-container { padding-top: 1.1rem; }
+section[data-testid="stSidebar"] hr { border-color: #1c2634; }
+
+/* ---------- metryki ---------- */
+[data-testid="stMetric"] {
+  background: linear-gradient(180deg, #0d1420, #0b101a) !important;
+  border: 1px solid #1c2634; border-radius: 8px;
+  padding: 10px 14px 12px !important;
+  box-shadow: inset 0 0 26px rgba(0,255,156,.03);
+}
+[data-testid="stMetricLabel"] {
+  color: #6b7a8f !important; text-transform: uppercase;
+  letter-spacing: .14em; font-size: .6rem !important;
+}
+[data-testid="stMetricValue"] {
+  color: #00ff9c !important; font-size: 1.55rem !important;
+  text-shadow: 0 0 14px rgba(0,255,156,.4);
+}
+[data-testid="stMetricDelta"] { font-size: .7rem !important; }
+
+/* ---------- karty kampanii / chipy ---------- */
+.kf-card { border: 1px solid #1c2634; border-radius: 8px; padding: 10px 12px 11px;
+           margin-bottom: .75rem; background: #0d1420; }
+.kf-card.campaign { border-color: rgba(255, 86, 86, .45);
+                    box-shadow: 0 0 18px rgba(255, 86, 86, .07) inset; }
+.kf-card.solo { opacity: .85; }
+.kf-card-top { display: flex; align-items: baseline; justify-content: space-between; }
+.kf-id { color: #e6edf3; font-weight: 700; letter-spacing: .06em; }
+.kf-badge { font-size: .62rem; letter-spacing: .12em; padding: 2px 8px; border-radius: 4px; }
+.kf-badge.camp { color: #ff6b6b; border: 1px solid rgba(255,86,86,.5); background: rgba(255,86,86,.08); }
+.kf-badge.inc { color: #8ad8ff; border: 1px solid #243042; background: #0a0f18; }
+.kf-members { margin-top: 6px; }
+.kf-chip { display: inline-block; padding: 1px 8px; margin: 3px 4px 0 0;
+           border: 1px solid #243042; border-radius: 4px; background: #0a0f18;
+           color: #8ad8ff; font-size: .72rem; }
+
+/* ---------- tabela cech (fallback bez pandas) ---------- */
+.kf-table-wrap { overflow-x: auto; border: 1px solid #1c2634; border-radius: 8px;
+                 background: #0b101a; box-shadow: inset 0 0 30px rgba(0,0,0,.35); }
+table.kf-table { border-collapse: collapse; width: 100%; font-size: .72rem; min-width: 1050px; }
+.kf-table th { background: #0d1420; color: #00ff9c; text-transform: uppercase;
+               letter-spacing: .1em; font-size: .58rem; font-weight: 700;
+               padding: 8px 10px; border-bottom: 1px solid #1c2634;
+               text-align: left; white-space: nowrap; position: sticky; top: 0; }
+.kf-table td { padding: 7px 10px; border-bottom: 1px solid #141c28;
+               color: #c9d1d9; white-space: nowrap; }
+.kf-table tbody tr:hover td { background: rgba(0, 255, 156, .04);
+                              box-shadow: inset 2px 0 0 #00ff9c; }
+.kf-table tbody tr:last-child td { border-bottom: none; }
+
+/* ---------- przyciski ---------- */
+div[data-testid="stButton"] > button,
+.stButton > button {
+  border: 1px solid rgba(0, 255, 156, .35) !important;
+  color: #00ff9c !important;
+  background: rgba(0, 255, 156, .05) !important;
+  border-radius: 6px !important;
+  letter-spacing: .08em; text-transform: uppercase;
+  font-size: .78rem !important;
+  transition: all .18s ease-in-out;
+}
+div[data-testid="stButton"] > button:hover,
+.stButton > button:hover {
+  background: rgba(0, 255, 156, .14) !important;
+  box-shadow: 0 0 16px rgba(0, 255, 156, .35);
+  border-color: #00ff9c !important;
+}
+div[data-testid="stDownloadButton"] > button,
+.stDownloadButton > button {
+  border: 1px solid #00ff9c !important;
+  color: #0a0e14 !important;
+  background: #00ff9c !important;
+  border-radius: 6px !important;
+  letter-spacing: .08em; text-transform: uppercase;
+  font-size: .78rem !important; font-weight: 700;
+  box-shadow: 0 0 22px rgba(0, 255, 156, .45) !important;
+}
+div[data-testid="stDownloadButton"] > button:hover { box-shadow: 0 0 34px rgba(0, 255, 156, .8) !important; }
+
+/* ---------- inputy ---------- */
+div[data-baseweb="input"] > input,
+div[data-baseweb="textarea"] textarea {
+  background: #0c1118 !important;
+  color: #e6edf3 !important;
+  border: 1px solid #1c2634 !important;
+  border-radius: 6px !important;
+  caret-color: #00ff9c !important;
+  font-size: .82rem !important;
+}
+div[data-baseweb="input"]:focus-within,
+div[data-baseweb="textarea"]:focus-within,
+div[data-baseweb="input"]:hover,
+div[data-baseweb="textarea"]:hover {
+  border-color: rgba(0, 255, 156, .55) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 156, .18) !important;
+}
+.stApp label, .stApp .st-ci { color: #7d8ca1 !important; font-size: .78rem !important; }
+[data-testid="stFileUploaderDropzone"] {
+  background: #0a0f18 !important; border: 1px dashed #1c2634 !important;
+  border-radius: 8px !important; color: #6b7a8f !important;
+}
+[data-testid="stFileUploaderDropzone"]:hover {
+  border-color: rgba(0, 255, 156, .45) !important;
+  box-shadow: inset 0 0 20px rgba(0, 255, 156, .05);
+}
+
+/* ---------- taby ---------- */
+div[data-testid="stTabs"] div[data-baseweb="tab-list"] { gap: 6px; }
+div[data-testid="stTabs"] button[data-baseweb="tab"] {
+  background: #0b101a !important; border-radius: 6px 6px 0 0 !important;
+  border: 1px solid #1c2634 !important; border-bottom: 2px solid #1c2634 !important;
+  color: #7d8ca1 !important; letter-spacing: .05em;
+  transition: all .18s ease-in-out;
+}
+div[data-testid="stTabs"] button[data-baseweb="tab"]:hover {
+  color: #00ff9c !important; box-shadow: 0 0 14px rgba(0,255,156,.15);
+  border-color: #24405a !important;
+}
+div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
+  color: #00ff9c !important; background: rgba(0, 255, 156, .06) !important;
+  border-bottom: 2px solid #00ff9c !important;
+  text-shadow: 0 0 10px rgba(0,255,156,.5);
+}
+div[data-testid="stTabs"] hr { border-color: #1c2634; }
+
+/* ---------- expander / alerty / tabele / graf ---------- */
+[data-testid="stExpander"], details[data-testid="stExpander"] {
+  border: 1px solid #1c2634 !important; border-radius: 8px !important;
+  background: #0c121d !important;
+}
+[data-testid="stExpander"] summary, details[data-testid="stExpander"] summary {
+  color: #00ff9c !important; font-size: .78rem !important; letter-spacing: .05em;
+}
+[data-testid="stExpander"] summary:hover { text-shadow: 0 0 10px rgba(0,255,156,.7); }
+
+[data-testid="stAlert"], [data-baseweb="notification"] {
+  border-radius: 6px !important;
+  border: 1px solid #1c2634 !important;
+  background: #0c121d !important;
+  backdrop-filter: blur(2px);
+}
+[data-baseweb="notification"] span, [data-baseweb="notification"] svg { color: #00ff9c !important; fill: #00ff9c !important; }
+div[role="alert"] { font-size: .85rem !important; color: #c9d1d9 !important; }
+
+[data-testid="stDataFrame"], [data-testid="stTable"] {
+  border: 1px solid #1c2634 !important; border-radius: 8px !important;
+  box-shadow: inset 0 0 30px rgba(0,0,0,.35);
+}
+[data-testid="stGraphVizChart"] {
+  border: 1px solid #1c2634; border-radius: 8px; padding: 10px;
+  background: #0b101a;
+}
+[data-testid="stGraphVizChart"] svg { border-radius: 6px; }
+
+.stApp hr, hr { border-color: #1c2634 !important; }
+[data-testid="stSpinner"] span { color: #00ff9c !important; }
+caption, .caption, p.small-font { color: #6b7a8f !important; font-size: .74rem !important; }
+a { color: #00d9ff !important; text-decoration: none; }
+a:hover { text-shadow: 0 0 8px rgba(0, 217, 255, .6); }
+</style>
+"""
+
+
+def inject_theme():
+    st.markdown(_KF_CSS, unsafe_allow_html=True)
+
+
+def features_table_html(rows):
+    """Tabela cech jako HTML (fallback, gdy pandas nie działa)."""
+    if not rows:
+        return "<p class='kf-sub'>brak danych</p>"
+    cols = list(rows[0].keys())
+    head = "".join(f"<th>{c}</th>" for c in cols)
+    body = "".join(
+        "<tr>" + "".join(f"<td>{r[c]}</td>" for c in cols) + "</tr>" for r in rows)
+    return (f'<div class="kf-table-wrap"><table class="kf-table">'
+            f'<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>')
+
+
+inject_theme()
+
+st.markdown(
+    """
+<div class="kf-head">
+  <div class="kf-term">
+    <span class="kf-dot r"></span><span class="kf-dot y"></span><span class="kf-dot g"></span>
+    &nbsp;kolekcjoner@fejki:~$ ./scan --correlate --campaigns<span class="kf-live"> ●</span>
+  </div>
+  <div class="kf-h1">KOLEKCJONER <span class="acc">FEJKÓW</span><span class="kf-cursor">█</span></div>
+  <p class="kf-sub">korelacja podejrzanych reklam w kampanie
+    <span class="tag">HackNation 2026</span><span class="tag">NASK</span>
+    <span class="tag">offline / lokalnie</span>
+  </p>
+</div>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 # ------------------------------------------------------------- stan
@@ -126,6 +410,14 @@ features = st.session_state.features
 with st.spinner("Buduję podobieństwa i klastry..."):
     clusters, links = build_clusters(features, cfg)
 
+# pasek metryk
+_m = st.columns(4)
+_hard = sum(1 for l in links if l.strong_signals)
+_m[0].metric("MATERIAŁY", len(features))
+_m[1].metric("KAMPANIE", len(clusters))
+_m[2].metric("POWIĄZANIA", len(links))
+_m[3].metric("TWARDE SYGNAŁY", _hard)
+
 tabs = st.tabs(["🗺️ Kampanie", "🕸️ Graf zależności", "🧬 Cechy materiałów",
                 "🔍 Nowy materiał", "📘 Metodyka"])
 
@@ -138,11 +430,19 @@ with tabs[0]:
         col = c_cols[i % 3]
         size = len(c.members)
         with col:
-            kind = "🚩 kampania" if size > 1 else "⚫ pojedynczy incydent"
-            st.markdown(f"**{c.cluster_id}** — {kind}, {size} mat.")
-            st.markdown("`" + "  ".join(c.members) + "`")
+            is_camp = size > 1
+            cls = "kf-card campaign" if is_camp else "kf-card solo"
+            badge_cls = "kf-badge camp" if is_camp else "kf-badge inc"
+            badge = "KAMPANIA · {} mat.".format(size) if is_camp else "POJEDYNCZY INCYDENT"
+            chips = " ".join(f'<span class="kf-chip">{m}</span>' for m in c.members)
+            st.markdown(
+                f'<div class="{cls}">'
+                f'<div class="kf-card-top"><span class="kf-id">{c.cluster_id}</span>'
+                f'<span class="{badge_cls}">{badge}</span></div>'
+                f'<div class="kf-members">{chips}</div></div>',
+                unsafe_allow_html=True)
             if c.links:
-                with st.expander(f"Przesłanki powiązań ({len(c.links)})"):
+                with st.expander(f"⚡ Przesłanki powiązań ({len(c.links)})"):
                     for l in sorted(c.links, key=lambda x: -x.score)[:8]:
                         strong = " ｜ ".join(l.strong_signals) or ""
                         st.markdown(
@@ -197,7 +497,10 @@ with tabs[2]:
             IP=f.ip or "—",
             modaliwości=",".join(sorted(f.available_modalities)),
         ))
-    st.dataframe(rows, use_container_width=True)
+    try:
+        st.dataframe(rows, width="stretch")
+    except Exception:
+        st.markdown(features_table_html(rows), unsafe_allow_html=True)
     st.caption("Braki danych (martwa domena, brak zrzutu) nie dyskwalifikują materiału — "
                "porównanie liczy się po dostępnych modaliowościach.")
 
