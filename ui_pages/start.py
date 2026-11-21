@@ -22,10 +22,12 @@ if graph:
     big = sorted((c for c in graph["clusters"] if len(c["members"]) >= 3),
                  key=lambda c: -len(c["members"]))
     if big:
+        titles = {n["id"]: (n.get("title") or n["id"])[:55] for n in graph["nodes"]}
         st.markdown("**Największe kampanie:**")
         for c in big[:6]:
-            st.write(f"• **{c['cluster_id']}** — {len(c['members'])} materiałów · {c['label'][:70]}")
-        st.caption("Pełny przegląd i szczegóły: strona **Kampanie**.")
+            ex = " / ".join(titles.get(m, m) for m in c["members"][:2])
+            st.write(f"• **{c['cluster_id']}** — {len(c['members'])} materiałów · {ex}")
+        st.caption("Pełny przegląd z podglądami materiałów: strona **Kampanie**.")
     else:
         st.info("Brak kampanii wieloelementowych — uruchom analizę.")
 else:

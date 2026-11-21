@@ -80,6 +80,35 @@ def _tt_card(inner: str, min_w: int = 280) -> str:
             f"font:12.5px/1.6 Consolas,monospace;color:#cdd7e0'>{inner}</div>")
 
 
+def preview_images(f: dict, max_n: int = 6) -> list:
+    """Najlepsze obrazy do podglądu incydentu (zrzuty > obrazy główne > największe)."""
+    base = Path(f["path"])
+    scored = []
+    for im in f.get("images", []):
+        p = base / im["path"]
+        if not p.is_file():
+            continue
+        name = p.name.lower()
+        score = 0
+        if "zrzut" in name or "screen" in name:
+            score += 100
+        if im.get("top"):
+            score += 50
+        if name.startswith(("img_00", "01-hero", "hero", "og-")):
+            score += 40
+        try:
+            score += min(p.stat().st_size // 100_000, 20)
+        except OSError:
+            pass
+        scored.append((score, p))
+    scored.sort(key=lambda x: -x[0])
+    return [p for _, p in scored[:max_n]]
+
+
+def title_map(graph) -> dict:
+    return {n["id"]: (n.get("title") or n["id"])[:60] for n in graph["nodes"]}
+
+
 def _tt_node(n: dict, deg_n: int) -> str:
     rows = []
     for label, val, maxlen in (("DOMENY", n.get("domains"), 8),
@@ -225,6 +254,8 @@ def render_graph(graph, mode: str = "hub"):
 
 def render_campaigns(graph, store):
     inc_feats = store.load_incidents()
+    titles = title_map(graph)
+    by_id = {f["id"]: f for f in inc_feats}
     clusters = graph["clusters"]
     big = sorted((c for c in clusters if len(c["members"]) >= 3),
                  key=lambda c: -len(c["members"]))
@@ -246,34 +277,41 @@ def render_campaigns(graph, store):
                 "Twarde": c["hard_links"],
                 "Śr. podob.": c["mean_score"],
                 "Motyw": c["label"][:70],
+                "Przykłady": " / ".join(titles.get(m, m)[:38] for m in c["members"][:2]),
             } for c in big])
             st.dataframe(df, hide_index=True, width="stretch")
         except Exception:
             for c in big:
                 st.write(f"• **{c['cluster_id']}** ({len(c['members'])}): {c['label'][:80]}")
         for c in big:
-            with st.expander(f"{c['cluster_id']} — szczegóły", expanded=False):
-                st.write(f"**Członkowie:** {', '.join(c['members'])}")
+            with st.expander(f"{c['cluster_id']} — {len(c['members'])} materiałów (szczegóły)",
+                             expanded=False):
                 st.write(f"**Przesłanki:** {c['summary']}")
-                pats = {}
-                for f in inc_feats:
-                    if f["id"] in c["members"]:
-                        for d in f["infra"].get("domain_patterns", []):
-                            pats.setdefault(d["pattern"], set()).add(d["domain"])
-                if pats:
-                    st.write("**Wzorce nazw domen:**")
-                    for p, doms in sorted(pats.items()):
-                        st.write(f"• `{p}` → {', '.join(sorted(doms))}")
-                names = [set(f.get("faces", {}).get("known_names") or [])
-                         for f in inc_feats if f["id"] in c["members"]]
-                shared = set.intersection(*names) if len(names) > 1 else (names[0] if names else set())
-                if shared:
-                    st.write(f"**Wizerunki osób:** {', '.join(sorted(shared))}")
+                st.write("**Materiały w kampanii:**")
+                for m in c["members"][:10]:
+                    f = by_id.get(m)
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        prev = preview_images(f, 1) if f else []
+                        if prev:
+                            try:
+                                st.image(str(prev[0]), width=150)
+                            except Exception:
+                                st.markdown("`(brak obrazu)`")
+                        else:
+                            st.markdown("`(brak podglądu)`")
+                    with col2:
+                        st.write(f"**{m}** · {titles.get(m, m)}")
+                        if f:
+                            d = f["infra"].get("registrable") or []
+                            if d:
+                                st.caption("domeny: " + ", ".join(d[:5]))
     if pairs:
         with st.expander(f"Pary wariantów ({len(pairs)}) — materiały niemal identyczne",
                          expanded=False):
             for c in pairs:
-                st.write(f"• **{c['cluster_id']}**: {', '.join(c['members'])} — {c['label'][:80]}")
+                st.write(f"• **{c['cluster_id']}**: "
+                         f"{' / '.join(titles.get(m, m) for m in c['members'])}")
     if not big and not pairs:
         st.info("Brak powiązanych materiałów w zbiorze.")
 
@@ -330,6 +368,19 @@ def render_incidents(graph, store):
     with c2:
         st.markdown("**Tekst strony (fragment):**")
         st.text(f["text"].get("body", "")[:600] or "(brak)")
+    prev = preview_images(f, 6)
+    if prev:
+        st.markdown("**Podgląd materiału:**")
+        cols = st.columns(min(3, len(prev)))
+        for i, p in enumerate(prev):
+            with cols[i % len(cols)]:
+                try:
+                    st.image(str(p), width=260)
+                    st.caption(p.name[:48])
+                except Exception:
+                    pass
+    elif f["text"].get("body"):
+        st.info(f"Brak obrazów — materiał tylko tekstowy: _{f['text']['body'][:220]}_")
     st.caption(f"Ścieżka: {f['path']}")
 
 
