@@ -288,18 +288,19 @@ def render_graph(graph, mode: str = "hub"):
                                   timeout=5).stdout.strip()
         except Exception:
             _ver = "?"
-        _panel_css = ("position:absolute;z-index:9999;"
+        _panel_css = ("position:absolute;z-index:99999;"
                       "max-width:400px;max-height:70vh;overflow:auto;"
-                      "background:#000000;border:1px solid #00ff9c;border-radius:8px;"
+                      "background:#000000;border:2px solid #00ff9c;border-radius:8px;"
                       "padding:12px 14px;display:none;"
                       "font:12.5px/1.6 Consolas,monospace;color:#cdd7e0;"
-                      "box-shadow:0 0 24px rgba(0,255,156,.25)")
+                      "box-shadow:0 0 0 3px #000000,0 0 32px rgba(0,255,156,.35)")
         js = """<div id="kf-panel" style="%s"></div>
 <script>
 (function () {
   var D = %s, E = %s, V = "%s", panel = document.getElementById("kf-panel"), last = null;
   function show(html, key, x, y) {
-    if (last === key) { panel.style.display = "none"; last = null; return; }
+    if (last === key) { panel.style.display = "none"; last = null;
+      network.setOptions({physics: {enabled: true}}); return; }
     panel.innerHTML = html +
       "<div style='margin-top:10px;text-align:right;color:#00ff9c;cursor:pointer' " +
       "onclick='window.kfClose()'>✕ zamknij</div>" +
@@ -307,8 +308,10 @@ def render_graph(graph, mode: str = "hub"):
     panel.style.left = Math.min(x, window.innerWidth - 430) + "px";
     panel.style.top = Math.max(8, Math.min(y, window.innerHeight - 320)) + "px";
     panel.style.display = "block"; last = key;
+    network.setOptions({physics: {enabled: false}});
   }
-  window.kfClose = function () { panel.style.display = "none"; last = null; };
+  window.kfClose = function () { panel.style.display = "none"; last = null;
+    network.setOptions({physics: {enabled: true}}); };
   network.on("click", function (p) {
     var px = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.x : 200;
     var py = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.y : 160;
@@ -320,7 +323,8 @@ def render_graph(graph, mode: str = "hub"):
         var k1 = ed.from + "|" + ed.to, k2 = ed.to + "|" + ed.from;
         show(E[k1] || E[k2] || "", "e:" + k1, x, y);
       }
-    } else { panel.style.display = "none"; last = null; }
+    } else { panel.style.display = "none"; last = null;
+      network.setOptions({physics: {enabled: true}}); }
   });
 })();
 </script>""" % (_panel_css, _json.dumps(detail, ensure_ascii=False),
