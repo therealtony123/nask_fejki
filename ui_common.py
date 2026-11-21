@@ -299,41 +299,50 @@ def render_graph(graph, mode: str = "hub"):
 (function () {
   var D = %s, E = %s, V = "%s", panel = document.getElementById("kf-panel"), last = null;
   var container = document.getElementById("mynetwork");
-  function shrink(w) {
+  var OB = "__kf_obstacle__";
+  function placeObstacle() {
     if (!container) return;
-    container.style.width = (w ? w + "px" : "100%%");
-    setTimeout(function () {
-      network.setSize(container.clientWidth || window.innerWidth,
-                      container.clientHeight || 640);
-      network.fit({ animation: { duration: 350, easingFunction: "easeInOutQuad" } });
-    }, 30);
+    var r = panel.getBoundingClientRect();
+    var cr = container.getBoundingClientRect();
+    var c = network.DOMtoCanvas({ x: r.left - cr.left + r.width / 2,
+                                  y: r.top - cr.top + r.height / 2 });
+    network.body.data.nodes.update({
+      id: OB, x: c.x, y: c.y, fixed: { x: true, y: true },
+      size: Math.max(r.width, r.height) / 2 + 25, mass: 5,
+      shape: "dot", borderWidth: 0, label: "", font: { size: 0 },
+      color: { background: "rgba(0,255,156,0)", border: "rgba(0,255,156,0)" }
+    });
+  }
+  function removeObstacle() {
+    if (network.body.data.nodes.get(OB)) network.body.data.nodes.remove(OB);
   }
   function show(html, key, x, y) {
-    if (last === key) { panel.style.display = "none"; last = null; shrink(null); return; }
+    if (last === key) { panel.style.display = "none"; last = null; removeObstacle(); return; }
     panel.innerHTML =
       "<div style='display:flex;justify-content:space-between;margin-bottom:8px'>" +
       "<span style='font-size:11px;color:#00ff9c'>graf v" + V + "</span>" +
       "<span style='color:#00ff9c;cursor:pointer' onclick='window.kfClose()'>✕ zamknij</span></div>" +
       html;
-    var px2 = Math.min(x, window.innerWidth - 430);
-    panel.style.left = px2 + "px";
+    panel.style.left = Math.min(x, window.innerWidth - 430) + "px";
     panel.style.top = Math.max(8, Math.min(y, window.innerHeight - 320)) + "px";
     panel.style.display = "block"; last = key;
-    shrink(px2);
+    setTimeout(placeObstacle, 40);
   }
-  window.kfClose = function () { panel.style.display = "none"; last = null; shrink(null); };
+  window.kfClose = function () { panel.style.display = "none"; last = null; removeObstacle(); };
   network.on("click", function (p) {
     var px = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.x : 200;
     var py = (p.pointer && p.pointer.DOM) ? p.pointer.DOM.y : 160;
     var x = px + 18, y = py + 14;
-    if (p.nodes.length) { show(D[p.nodes[0]] || "", "n:" + p.nodes[0], x, y); }
-    else if (p.edges.length) {
+    if (p.nodes.length) {
+      if (p.nodes[0] === OB) { return; }
+      show(D[p.nodes[0]] || "", "n:" + p.nodes[0], x, y);
+    } else if (p.edges.length) {
       var ed = network.body.data.edges.get(p.edges[0]);
       if (ed) {
         var k1 = ed.from + "|" + ed.to, k2 = ed.to + "|" + ed.from;
         show(E[k1] || E[k2] || "", "e:" + k1, x, y);
       }
-    } else { panel.style.display = "none"; last = null; shrink(null); }
+    } else { panel.style.display = "none"; last = null; removeObstacle(); }
   });
 })();
 </script>""" % (_panel_css, _json.dumps(detail, ensure_ascii=False),
