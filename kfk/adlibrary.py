@@ -16,7 +16,7 @@ import requests
 
 from .features import norm_text
 
-GRAPH_API = "https://graph.facebook.com/v21.0"
+GRAPH_API = "https://graph.facebook.com/v27.0"
 AD_FIELDS = ("ad_creative_bodies,ad_creation_time,ad_delivery_start_time,"
              "ad_snapshot_url,page_id,page_name,ad_creative_link_titles,"
              "ad_creative_link_descriptions,ad_creative_link_captions")

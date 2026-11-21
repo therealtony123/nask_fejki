@@ -177,6 +177,19 @@ pipeline przelicza kampanie, a raport wskazuje **PRZYPISANO DO KAMPANII** lub
 **NOWY WZORZEC** (próg `--join`, domyślnie 0.30). Deduplikacja po ID reklamy,
 paginacja przez `--pages`.
 
+### Pomocnik 2: zbieranie podejrzanych stron z otwartych źródeł (bez kluczy API)
+
+```bash
+python harvest_urls.py --source both --pages 3 --max 50 --run-pipeline
+```
+
+Pobiera świeże podejrzane strony z publicznych źródeł (**OpenPhish** — feed
+phishingowych URL-i, **AA419** — baza fałszywych banków i platform
+inwestycyjnych), zapisuje je jako incydenty (`harvest_<seq>/` z `page.html`,
+`meta.json` i obrazami), a następnie uruchamia pipeline i raportuje, które
+strony da się powiązać ze znanymi kampaniami, a które to nowe wzorce.
+Deduplikacja po domenie rejestrowalnej, pobieranie równoległe.
+
 ---
 
 ## 3. Zależności i licencje
