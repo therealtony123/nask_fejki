@@ -7,3 +7,5 @@ eda_report.txt
 tessdata/
 data/
 .DS_Store
+*.ioc.csv
+*.stix.json
