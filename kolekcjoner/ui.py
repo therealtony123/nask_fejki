@@ -352,6 +352,88 @@ _EXTRA_CSS = """
 .kf-guide { border-left: 2px solid #00ff9c; padding: 2px 0 2px 12px; margin: .4rem 0 1rem;
             color: #9aa7ba; font-size: .74rem; line-height: 1.6; }
 .kf-guide b { color: #00ff9c; }
+
+/* ---------- podgląd materiałów w dialogu ---------- */
+div[role="dialog"],
+[data-testid="stDialog"] {
+  width: calc(100vw - 32px) !important;
+  max-width: none !important;
+  height: calc(100vh - 32px) !important;
+  max-height: none !important;
+  margin: auto !important;
+  border: 1px solid rgba(0,255,156,.32) !important;
+  border-radius: 8px !important;
+  background: #0b101a !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.72),
+              0 0 40px rgba(0,255,156,.08) !important;
+}
+div[role="dialog"] > div {
+  background: #0b101a !important;
+}
+div[role="dialog"] [data-testid="stModal"] {
+  overflow-y: auto;
+  background: #0b101a;
+}
+.kf-preview-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #1c2634;
+}
+.kf-preview-cluster {
+  color: #e6edf3;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.kf-preview-count {
+  color: #00ff9c;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.kf-preview-material {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #1c2634;
+}
+.kf-preview-id {
+  color: #e6edf3;
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.kf-preview-source {
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid #243042;
+  border-radius: 4px;
+  padding: 2px 7px;
+  color: #8ad8ff;
+  background: #0a0f18;
+  font-size: .56rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.kf-preview-meta-label {
+  display: inline-block;
+  margin: 8px 6px 0 0;
+  color: #00ff9c;
+  font-size: .6rem;
+  letter-spacing: .12em;
+}
+.kf-preview-url {
+  display: inline;
+  overflow-wrap: anywhere;
+  font-size: .72rem;
+}
 </style>
 """
 
