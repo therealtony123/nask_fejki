@@ -6,7 +6,6 @@ Pełny proces: materiały -> ekstrakcja cech -> podobieństwa -> klastry/kampani
 -> graf zależności z przesłankami -> analiza nowego materiału.
 """
 import json
-import random
 import sys
 from pathlib import Path
 
@@ -55,17 +54,6 @@ button, input, textarea, select, label, summary {
               rgba(0, 0, 0, .14) 0px, rgba(0, 0, 0, .14) 1px,
               transparent 1px, transparent 3px);
   opacity: .5;
-}
-
-/* binarne tło 0101… — pod treścią, delikatnie przezroczyste */
-.kf-matrix {
-  position: fixed; inset: 0; z-index: -1;
-  overflow: hidden; pointer-events: none; user-select: none;
-  color: rgba(0, 255, 156, .06);
-  font-size: 12px; line-height: 2.6rem; letter-spacing: .3em;
-  white-space: pre-wrap; word-break: break-all;
-  padding: 4px 12px;
-  text-shadow: 0 0 8px rgba(0, 255, 156, .12);
 }
 
 ::selection { background: rgba(0, 255, 156, .25); }
@@ -330,18 +318,6 @@ def features_table_html(rows):
 
 
 inject_theme()
-
-# binarne tło 0101… (deterministyczny wzór, generowany raz na sesję)
-if "kf_binary_bg" not in st.session_state:
-    rng = random.Random(0x1010)
-    lines = []
-    for _ in range(48):
-        width = rng.randint(70, 115)
-        lines.append("".join(
-            rng.choice(("0", "1", " ", " ")) for _ in range(width)))
-    st.session_state.kf_binary_bg = "\n".join(lines)
-st.markdown(f'<div class="kf-matrix" aria-hidden="true">{st.session_state.kf_binary_bg}</div>',
-            unsafe_allow_html=True)
 
 st.markdown(
     """
