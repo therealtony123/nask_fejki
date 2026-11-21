@@ -106,7 +106,14 @@ def preview_images(f: dict, max_n: int = 6) -> list:
 
 
 def title_map(graph) -> dict:
-    return {n["id"]: (n.get("title") or n["id"])[:60] for n in graph["nodes"]}
+    out = {}
+    for n in graph["nodes"]:
+        t = (n.get("title") or "").strip()
+        if not t or t == n["id"] or t.startswith("/"):
+            doms = n.get("domains") or []
+            t = doms[0] if doms else "(bez tytułu)"
+        out[n["id"]] = t[:60]
+    return out
 
 
 def _tt_node(n: dict, deg_n: int) -> str:
@@ -294,7 +301,11 @@ def render_campaigns(graph, store):
                     right = st.container()
                 with right:
                     st.markdown(f"### {c['cluster_id']} — {len(c['members'])} materiałów")
-                    st.markdown(f"*{' · '.join(titles.get(m, m)[:46] for m in members_preview)}*")
+                    uniq = []
+                    for t in [titles.get(m, m) for m in members_preview]:
+                        if t not in uniq:
+                            uniq.append(t)
+                    st.markdown(f"*{' · '.join(t[:46] for t in uniq[:3])}*")
                     st.write(f"**Motyw:** {c['label'][:160] or '—'}")
                     st.write(f"Twarde powiązania: **{c['hard_links']}** · "
                              f"średnie podobieństwo: **{c['mean_score']}**")

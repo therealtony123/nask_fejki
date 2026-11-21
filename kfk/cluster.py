@@ -1,4 +1,5 @@
 """Graf incydentów + klastrowanie (Louvain) + przypisywanie nowych materiałów."""
+import re
 from collections import Counter, defaultdict
 
 import networkx as nx
@@ -44,21 +45,26 @@ def cluster_graph(incident_ids: list, edges: list, min_score: float = 0.25):
         edges_in = list(sub.edges(data=True))
         mean_score = (sum(d["score"] for _, _, d in edges_in) / len(edges_in)) if edges_in else 0.0
         hard_links = sum(1 for _, _, d in edges_in if d.get("hard"))
-        # etykieta klastra: najczęstsze przesłanki z WSZYSTKICH krawędzi kampanii
-        ev_counter = Counter()
+        # etykieta klastra: najczęstsze przesłanki ze WSZYSTKICH krawędzi kampanii,
+        # z deduplikacją wariantów („cos=0.37" vs „cos=1.0" → jedna pozycja)
+        key_counts = Counter()
+        key_repr = {}
         for _, _, d in edges_in:
             for h in d.get("evidence", [])[:2]:
-                ev_counter[h] += 1
+                k = re.sub(r"[0-9.,]+", "#", h)[:60]
+                key_counts[k] += 1
+                if k not in key_repr:
+                    key_repr[k] = h
         if len(members) == 1:
             label = "pojedynczy materiał (brak powiązań)"
         else:
-            label = ("; ".join([e for e, _ in ev_counter.most_common(3)])
+            label = ("; ".join(key_repr[k] for k, _ in key_counts.most_common(3))
                      or "powiązane tylko słabymi sygnałami")
         clusters.append({
             "cluster_id": f"K{idx + 1:02d}",
             "members": sorted(members),
             "label": label,
-            "summary": [e for e, _ in ev_counter.most_common(5)],
+            "summary": [key_repr[k] for k, _ in key_counts.most_common(5)],
             "n_edges": len(edges_in),
             "mean_score": round(mean_score, 3),
             "hard_links": hard_links,

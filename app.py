@@ -20,10 +20,16 @@ from ui_common import (DEFAULT_DATA, DEFAULT_DB, load_graph, run_analysis)
 
 st.set_page_config(page_title="Kolekcjoner fejków", page_icon="🕵️", layout="wide")
 
-if "graph" not in st.session_state:
-    st.session_state["graph"] = load_graph(str(DEFAULT_DB))
-if "db" not in st.session_state:
-    st.session_state["db"] = str(DEFAULT_DB)
+# automatyczne wczytanie świeżych wyników (graf.json z nowszym mtime)
+_gf = Path(str(DEFAULT_DB)).with_suffix(".graph.json")
+if _gf.is_file():
+    _mt = _gf.stat().st_mtime
+    if st.session_state.get("graph_mtime") != _mt:
+        st.session_state["graph"] = load_graph(str(DEFAULT_DB))
+        st.session_state["graph_mtime"] = _mt
+        st.session_state["db"] = str(DEFAULT_DB)
+elif "graph" not in st.session_state:
+    st.session_state["graph"] = None
 
 inject_theme()
 

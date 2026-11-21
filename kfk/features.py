@@ -270,7 +270,8 @@ KNOWN_PLATFORMS = {"facebook.com", "facebook.net", "google.com", "google.pl",
                    "googleapis.com", "gstatic.com", "doubleclick.net",
                    "googletagmanager.com", "jsdelivr.net", "cloudflare.com",
                    "unpkg.com", "jquery.com", "unsplash.com", "netlify.app",
-                   "er-api.com", "b-cdn.net", "translate.google.com"}
+                   "er-api.com", "b-cdn.net", "translate.google.com",
+                   "bootstrapcdn.com", "fontawesome.com", "gtranslate.net"}
 
 
 def domain_patterns(registrable_domains):

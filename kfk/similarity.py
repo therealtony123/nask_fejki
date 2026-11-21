@@ -146,7 +146,7 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
     ca, cb = fa["structure"]["css_classes"], fb["structure"]["css_classes"]
     jc = _jac(ca, cb)
     if jc is not None:
-        if jc > 0:
+        if jc >= 0.02:
             views["structure"] = (round(min(jc * 2, 1.0), 3),
                                   [f"wspólny szablon HTML (jaccard klas CSS: {jc:.2f})"])
         else:
