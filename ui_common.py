@@ -269,43 +269,54 @@ def render_campaigns(graph, store):
     m4.metric("Kampanie łącznie", len(clusters))
     if big:
         st.markdown("### Główne kampanie")
-        try:
-            import pandas as pd
-            df = pd.DataFrame([{
-                "Kampania": c["cluster_id"],
-                "Materiały": len(c["members"]),
-                "Twarde": c["hard_links"],
-                "Śr. podob.": c["mean_score"],
-                "Motyw": c["label"][:70],
-                "Przykłady": " / ".join(titles.get(m, m)[:38] for m in c["members"][:2]),
-            } for c in big])
-            st.dataframe(df, hide_index=True, width="stretch")
-        except Exception:
-            for c in big:
-                st.write(f"• **{c['cluster_id']}** ({len(c['members'])}): {c['label'][:80]}")
         for c in big:
-            with st.expander(f"{c['cluster_id']} — {len(c['members'])} materiałów (szczegóły)",
-                             expanded=False):
-                st.write(f"**Przesłanki:** {c['summary']}")
-                st.write("**Materiały w kampanii:**")
-                for m in c["members"][:10]:
-                    f = by_id.get(m)
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        prev = preview_images(f, 1) if f else []
-                        if prev:
-                            try:
-                                st.image(str(prev[0]), width=150)
-                            except Exception:
-                                st.markdown("`(brak obrazu)`")
-                        else:
-                            st.markdown("`(brak podglądu)`")
-                    with col2:
-                        st.write(f"**{m}** · {titles.get(m, m)}")
-                        if f:
-                            d = f["infra"].get("registrable") or []
-                            if d:
-                                st.caption("domeny: " + ", ".join(d[:5]))
+            members_preview = c["members"][:4]
+            thumbs = []
+            for m in members_preview[:3]:
+                f = by_id.get(m)
+                if f:
+                    prev = preview_images(f, 1)
+                    if prev:
+                        thumbs.append((m, prev[0]))
+            with st.container(border=True):
+                if thumbs:
+                    left, right = st.columns([2.6, 3.4])
+                    with left:
+                        tcols = st.columns(len(thumbs))
+                        for i, (m, p) in enumerate(thumbs):
+                            with tcols[i]:
+                                try:
+                                    st.image(str(p), width=200)
+                                except Exception:
+                                    pass
+                                st.caption(m)
+                else:
+                    right = st.container()
+                with right:
+                    st.markdown(f"### {c['cluster_id']} — {len(c['members'])} materiałów")
+                    st.markdown(f"*{' · '.join(titles.get(m, m)[:46] for m in members_preview)}*")
+                    st.write(f"**Motyw:** {c['label'][:160] or '—'}")
+                    st.write(f"Twarde powiązania: **{c['hard_links']}** · "
+                             f"średnie podobieństwo: **{c['mean_score']}**")
+                    with st.expander("Wszystkie materiały"):
+                        for m in c["members"]:
+                            f = by_id.get(m)
+                            col1, col2 = st.columns([1, 4])
+                            with col1:
+                                prev = preview_images(f, 1) if f else []
+                                if prev:
+                                    try:
+                                        st.image(str(prev[0]), width=160)
+                                    except Exception:
+                                        st.markdown("`(brak obrazu)`")
+                                else:
+                                    st.markdown("`(brak podglądu)`")
+                            with col2:
+                                st.write(f"**{m}** · {titles.get(m, m)}")
+                                if f:
+                                    d = f["infra"].get("registrable") or []
+                                    if d:
+                                        st.caption("domeny: " + ", ".join(d[:5]))
     if pairs:
         with st.expander(f"Pary wariantów ({len(pairs)}) — materiały niemal identyczne",
                          expanded=False):

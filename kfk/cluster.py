@@ -44,13 +44,16 @@ def cluster_graph(incident_ids: list, edges: list, min_score: float = 0.25):
         edges_in = list(sub.edges(data=True))
         mean_score = (sum(d["score"] for _, _, d in edges_in) / len(edges_in)) if edges_in else 0.0
         hard_links = sum(1 for _, _, d in edges_in if d.get("hard"))
-        # etykieta klastra: najczęstsze przesłanki twarde + wspólne elementy
+        # etykieta klastra: najczęstsze przesłanki z WSZYSTKICH krawędzi kampanii
         ev_counter = Counter()
         for _, _, d in edges_in:
-            if d.get("hard"):
-                for h in d.get("evidence", [])[:2]:
-                    ev_counter[h] += 1
-        label = "; ".join([e for e, _ in ev_counter.most_common(3)]) or "klaster bez twardych przesłanek"
+            for h in d.get("evidence", [])[:2]:
+                ev_counter[h] += 1
+        if len(members) == 1:
+            label = "pojedynczy materiał (brak powiązań)"
+        else:
+            label = ("; ".join([e for e, _ in ev_counter.most_common(3)])
+                     or "powiązane tylko słabymi sygnałami")
         clusters.append({
             "cluster_id": f"K{idx + 1:02d}",
             "members": sorted(members),
