@@ -1,0 +1,8 @@
+# Motyw: ciemny terminal / dark-ops
+[theme]
+base = "dark"
+primaryColor = "#00ff9c"
+backgroundColor = "#0a0e14"
+secondaryBackgroundColor = "#0f1520"
+textColor = "#c9d1d9"
+font = "monospace"

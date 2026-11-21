@@ -22,7 +22,319 @@ from kolekcjoner import (  # noqa: E402
 ROOT = Path(__file__).resolve().parent
 
 st.set_page_config(page_title="Kolekcjoner fejków", page_icon="🕵️", layout="wide")
-st.title("🕵️ Kolekcjoner fejków — korelacja podejrzanych reklam w kampanie")
+
+# ------------------------------------------------------------- skin (dark-ops)
+
+_KF_CSS = """
+<style>
+/* ===== KOLEKCJONER FEJKÓW // dark-ops skin — wszystko lokalnie ===== */
+
+@keyframes kf-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes kf-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+html, body, .stApp, .stApp [class*="css"],
+button, input, textarea, select, label, summary {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Roboto Mono',
+               'Ubuntu Mono', 'Liberation Mono', monospace !important;
+}
+
+.stApp {
+  background:
+    radial-gradient(1100px 520px at 88% -10%, rgba(0, 255, 156, .06), transparent 60%),
+    radial-gradient(900px 460px at -8% 112%, rgba(0, 217, 255, .05), transparent 60%),
+    #0a0e14 !important;
+  color: #c9d1d9;
+}
+
+/* delikatne scanlines na całym ekranie */
+.stApp::after {
+  content: "";
+  position: fixed; inset: 0; z-index: 99999; pointer-events: none;
+  background: repeating-linear-gradient(0deg,
+              rgba(0, 0, 0, .14) 0px, rgba(0, 0, 0, .14) 1px,
+              transparent 1px, transparent 3px);
+  opacity: .5;
+}
+
+::selection { background: rgba(0, 255, 156, .25); }
+* { scrollbar-color: #1c2634 #0a0e14; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0a0e14; }
+::-webkit-scrollbar-thumb { background: #1c2634; border-radius: 6px; border: 2px solid #0a0e14; }
+::-webkit-scrollbar-thumb:hover { background: #00ff9c66; }
+
+/* ---------- header ---------- */
+.kf-head {
+  position: relative; overflow: hidden;
+  border: 1px solid #1c2634; border-radius: 10px;
+  padding: 16px 22px 14px; margin-bottom: 1.1rem;
+  background: linear-gradient(180deg, rgba(0,255,156,.05), rgba(0,217,255,.02) 55%, transparent), #0c1220;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 0 34px rgba(0,255,156,.05);
+}
+.kf-head::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #00ff9c, #00d9ff 45%, transparent 80%);
+  box-shadow: 0 0 12px rgba(0,255,156,.7);
+}
+.kf-term { color: #4d5c6e; font-size: .72rem; letter-spacing: .1em; }
+.kf-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+.kf-dot.r { background: #ff5f57; } .kf-dot.y { background: #febc2e; } .kf-dot.g { background: #28c840; }
+.kf-h1 {
+  margin: .45rem 0 .15rem; font-size: 1.95rem; font-weight: 800;
+  letter-spacing: .07em; color: #e6edf3; line-height: 1.15;
+}
+.kf-h1 .acc { color: #00ff9c; text-shadow: 0 0 16px rgba(0,255,156,.55); }
+.kf-cursor { color: #00ff9c; animation: kf-blink 1.1s step-end infinite; }
+.kf-sub { color: #7d8ca1; font-size: .78rem; margin: 0; }
+.kf-sub .tag {
+  border: 1px solid #243042; border-radius: 4px; padding: 1px 7px;
+  color: #8ad8ff; background: #0a0f18; margin-left: 6px;
+}
+.kf-live { color: #ff5f57; animation: kf-pulse 1.6s ease-in-out infinite; }
+
+/* ---------- typografia sekcji ---------- */
+h2, h3, .stApp h2, .stApp h3 {
+  color: #e6edf3 !important;
+  letter-spacing: .04em;
+  border-left: 3px solid #00ff9c;
+  padding-left: 10px;
+  text-shadow: 0 0 10px rgba(0,255,156,.15);
+}
+.small-font, .stApp p, .stApp li { font-size: .9rem; }
+code { background: #0a0f18 !important; border: 1px solid #1c2634; border-radius: 4px; padding: 1px 6px; }
+blockquote { border-left: 3px solid #00d9ff; }
+
+/* ---------- sidebar ---------- */
+section[data-testid="stSidebar"] {
+  background: #0b111c !important;
+  border-right: 1px solid #16202e;
+  box-shadow: -12px 0 34px rgba(0,0,0,.45);
+}
+section[data-testid="stSidebar"] .block-container { padding-top: .55rem; }
+section[data-testid="stSidebar"] hr { border-color: #1c2634; }
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: .3rem; }
+
+/* nagłówki sekcji w sidebarze */
+.kf-side-head { margin: 0 0 .9rem; }
+.kf-side-kicker { display: block; color: #4d5c6e; font-size: .58rem;
+                  letter-spacing: .26em; margin-bottom: 3px; }
+.kf-side-title {
+  color: #00ff9c; font-size: 1.02rem; font-weight: 800; letter-spacing: .09em;
+  text-shadow: 0 0 14px rgba(0, 255, 156, .4);
+  border-bottom: 1px solid #1c2634; padding-bottom: 9px;
+}
+.kf-side-title.sm { color: #8ad8ff; font-size: .92rem;
+                   text-shadow: 0 0 12px rgba(0, 217, 255, .3); }
+.kf-side-count { color: #7d8ca1; font-size: .68rem; margin-top: 7px; }
+.kf-side-sep { height: 1px; margin: 1.35rem 0 .6rem;
+               background: linear-gradient(90deg, #1c2634, transparent); }
+.kf-lbl { color: #c9d1d9; font-size: .76rem; letter-spacing: .06em;
+          margin: .55rem 0 .45rem; }
+.kf-lbl b { color: #00ff9c; }
+
+/* odstępy widgetów w sidebarze */
+section[data-testid="stSidebar"] [data-testid="stSlider"] { margin: .3rem 0 1.35rem; }
+section[data-testid="stSidebar"] [data-testid="stSlider"] label { font-size: .72rem; }
+section[data-testid="stSidebar"] [data-testid="stTextInput"],
+section[data-testid="stSidebar"] [data-testid="stTextArea"] { margin: .3rem 0 1.05rem; }
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] { margin: .3rem 0 1.2rem; }
+section[data-testid="stSidebar"] div[data-testid="stWidgetLabel"] p { font-size: .72rem; }
+section[data-testid="stSidebar"] [data-testid="stButton"] { margin: .15rem 0 .45rem; }
+
+/* ---------- metryki ---------- */
+[data-testid="stMetric"] {
+  background: linear-gradient(180deg, #0d1420, #0b101a) !important;
+  border: 1px solid #1c2634; border-radius: 8px;
+  padding: 10px 14px 12px !important;
+  box-shadow: inset 0 0 26px rgba(0,255,156,.03);
+}
+[data-testid="stMetricLabel"] {
+  color: #6b7a8f !important; text-transform: uppercase;
+  letter-spacing: .14em; font-size: .6rem !important;
+}
+[data-testid="stMetricValue"] {
+  color: #00ff9c !important; font-size: 1.55rem !important;
+  text-shadow: 0 0 14px rgba(0,255,156,.4);
+}
+[data-testid="stMetricDelta"] { font-size: .7rem !important; }
+
+/* ---------- karty kampanii / chipy ---------- */
+.kf-card { border: 1px solid #1c2634; border-radius: 8px; padding: 10px 12px 11px;
+           margin-bottom: .75rem; background: #0d1420; }
+.kf-card.campaign { border-color: rgba(255, 86, 86, .45);
+                    box-shadow: 0 0 18px rgba(255, 86, 86, .07) inset; }
+.kf-card.solo { opacity: .85; }
+.kf-card-top { display: flex; align-items: baseline; justify-content: space-between; }
+.kf-id { color: #e6edf3; font-weight: 700; letter-spacing: .06em; }
+.kf-badge { font-size: .62rem; letter-spacing: .12em; padding: 2px 8px; border-radius: 4px; }
+.kf-badge.camp { color: #ff6b6b; border: 1px solid rgba(255,86,86,.5); background: rgba(255,86,86,.08); }
+.kf-badge.inc { color: #8ad8ff; border: 1px solid #243042; background: #0a0f18; }
+.kf-members { margin-top: 6px; }
+.kf-chip { display: inline-block; padding: 1px 8px; margin: 3px 4px 0 0;
+           border: 1px solid #243042; border-radius: 4px; background: #0a0f18;
+           color: #8ad8ff; font-size: .72rem; }
+
+/* ---------- tabela cech (fallback bez pandas) ---------- */
+.kf-table-wrap { overflow-x: auto; border: 1px solid #1c2634; border-radius: 8px;
+                 background: #0b101a; box-shadow: inset 0 0 30px rgba(0,0,0,.35); }
+table.kf-table { border-collapse: collapse; width: 100%; font-size: .72rem; min-width: 1050px; }
+.kf-table th { background: #0d1420; color: #00ff9c; text-transform: uppercase;
+               letter-spacing: .1em; font-size: .58rem; font-weight: 700;
+               padding: 8px 10px; border-bottom: 1px solid #1c2634;
+               text-align: left; white-space: nowrap; position: sticky; top: 0; }
+.kf-table td { padding: 7px 10px; border-bottom: 1px solid #141c28;
+               color: #c9d1d9; white-space: nowrap; }
+.kf-table tbody tr:hover td { background: rgba(0, 255, 156, .04);
+                              box-shadow: inset 2px 0 0 #00ff9c; }
+.kf-table tbody tr:last-child td { border-bottom: none; }
+
+/* ---------- przyciski ---------- */
+div[data-testid="stButton"] > button,
+.stButton > button {
+  border: 1px solid rgba(0, 255, 156, .35) !important;
+  color: #00ff9c !important;
+  background: rgba(0, 255, 156, .05) !important;
+  border-radius: 6px !important;
+  letter-spacing: .08em; text-transform: uppercase;
+  font-size: .78rem !important;
+  transition: all .18s ease-in-out;
+}
+div[data-testid="stButton"] > button:hover,
+.stButton > button:hover {
+  background: rgba(0, 255, 156, .14) !important;
+  box-shadow: 0 0 16px rgba(0, 255, 156, .35);
+  border-color: #00ff9c !important;
+}
+div[data-testid="stDownloadButton"] > button,
+.stDownloadButton > button {
+  border: 1px solid #00ff9c !important;
+  color: #0a0e14 !important;
+  background: #00ff9c !important;
+  border-radius: 6px !important;
+  letter-spacing: .08em; text-transform: uppercase;
+  font-size: .78rem !important; font-weight: 700;
+  box-shadow: 0 0 22px rgba(0, 255, 156, .45) !important;
+}
+div[data-testid="stDownloadButton"] > button:hover { box-shadow: 0 0 34px rgba(0, 255, 156, .8) !important; }
+
+/* ---------- inputy ---------- */
+div[data-baseweb="input"] > input,
+div[data-baseweb="textarea"] textarea {
+  background: #0c1118 !important;
+  color: #e6edf3 !important;
+  border: 1px solid #1c2634 !important;
+  border-radius: 6px !important;
+  caret-color: #00ff9c !important;
+  font-size: .82rem !important;
+}
+div[data-baseweb="input"]:focus-within,
+div[data-baseweb="textarea"]:focus-within,
+div[data-baseweb="input"]:hover,
+div[data-baseweb="textarea"]:hover {
+  border-color: rgba(0, 255, 156, .55) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 156, .18) !important;
+}
+.stApp label, .stApp .st-ci { color: #7d8ca1 !important; font-size: .78rem !important; }
+[data-testid="stFileUploaderDropzone"] {
+  background: #0a0f18 !important; border: 1px dashed #1c2634 !important;
+  border-radius: 8px !important; color: #6b7a8f !important;
+}
+[data-testid="stFileUploaderDropzone"]:hover {
+  border-color: rgba(0, 255, 156, .45) !important;
+  box-shadow: inset 0 0 20px rgba(0, 255, 156, .05);
+}
+
+/* ---------- taby ---------- */
+div[data-testid="stTabs"] div[data-baseweb="tab-list"] { gap: 6px; }
+div[data-testid="stTabs"] button[data-baseweb="tab"] {
+  background: #0b101a !important; border-radius: 6px 6px 0 0 !important;
+  border: 1px solid #1c2634 !important; border-bottom: 2px solid #1c2634 !important;
+  color: #7d8ca1 !important; letter-spacing: .05em;
+  transition: all .18s ease-in-out;
+}
+div[data-testid="stTabs"] button[data-baseweb="tab"]:hover {
+  color: #00ff9c !important; box-shadow: 0 0 14px rgba(0,255,156,.15);
+  border-color: #24405a !important;
+}
+div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
+  color: #00ff9c !important; background: rgba(0, 255, 156, .06) !important;
+  border-bottom: 2px solid #00ff9c !important;
+  text-shadow: 0 0 10px rgba(0,255,156,.5);
+}
+div[data-testid="stTabs"] hr { border-color: #1c2634; }
+
+/* ---------- expander / alerty / tabele / graf ---------- */
+[data-testid="stExpander"], details[data-testid="stExpander"] {
+  border: 1px solid #1c2634 !important; border-radius: 8px !important;
+  background: #0c121d !important;
+}
+[data-testid="stExpander"] summary, details[data-testid="stExpander"] summary {
+  color: #00ff9c !important; font-size: .78rem !important; letter-spacing: .05em;
+}
+[data-testid="stExpander"] summary:hover { text-shadow: 0 0 10px rgba(0,255,156,.7); }
+
+[data-testid="stAlert"], [data-baseweb="notification"] {
+  border-radius: 6px !important;
+  border: 1px solid #1c2634 !important;
+  background: #0c121d !important;
+  backdrop-filter: blur(2px);
+}
+[data-baseweb="notification"] span, [data-baseweb="notification"] svg { color: #00ff9c !important; fill: #00ff9c !important; }
+div[role="alert"] { font-size: .85rem !important; color: #c9d1d9 !important; }
+
+[data-testid="stDataFrame"], [data-testid="stTable"] {
+  border: 1px solid #1c2634 !important; border-radius: 8px !important;
+  box-shadow: inset 0 0 30px rgba(0,0,0,.35);
+}
+[data-testid="stGraphVizChart"] {
+  border: 1px solid #1c2634; border-radius: 8px; padding: 10px;
+  background: #0b101a;
+}
+[data-testid="stGraphVizChart"] svg { border-radius: 6px; }
+
+.stApp hr, hr { border-color: #1c2634 !important; }
+[data-testid="stSpinner"] span { color: #00ff9c !important; }
+caption, .caption, p.small-font { color: #6b7a8f !important; font-size: .74rem !important; }
+a { color: #00d9ff !important; text-decoration: none; }
+a:hover { text-shadow: 0 0 8px rgba(0, 217, 255, .6); }
+</style>
+"""
+
+
+def inject_theme():
+    st.markdown(_KF_CSS, unsafe_allow_html=True)
+
+
+def features_table_html(rows):
+    """Tabela cech jako HTML (fallback, gdy pandas nie działa)."""
+    if not rows:
+        return "<p class='kf-sub'>brak danych</p>"
+    cols = list(rows[0].keys())
+    head = "".join(f"<th>{c}</th>" for c in cols)
+    body = "".join(
+        "<tr>" + "".join(f"<td>{r[c]}</td>" for c in cols) + "</tr>" for r in rows)
+    return (f'<div class="kf-table-wrap"><table class="kf-table">'
+            f'<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>')
+
+
+inject_theme()
+
+st.markdown(
+    """
+<div class="kf-head">
+  <div class="kf-term">
+    <span class="kf-dot r"></span><span class="kf-dot y"></span><span class="kf-dot g"></span>
+    &nbsp;kolekcjoner@fejki:~$ ./scan --correlate --campaigns<span class="kf-live"> ●</span>
+  </div>
+  <div class="kf-h1">KOLEKCJONER <span class="acc">FEJKÓW</span><span class="kf-cursor">█</span></div>
+  <p class="kf-sub">korelacja podejrzanych reklam w kampanie
+    <span class="tag">HackNation 2026</span><span class="tag">NASK</span>
+    <span class="tag">offline / lokalnie</span>
+  </p>
+</div>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 # ------------------------------------------------------------- stan
@@ -61,7 +373,11 @@ def add_material(m: Material):
 # ------------------------------------------------------------- sidebar
 
 with st.sidebar:
-    st.header("⚙️ Parametry analizy")
+    st.markdown(
+        '<div class="kf-side-head">'
+        '<span class="kf-side-kicker">// config</span>'
+        '<div class="kf-side-title">PARAMETRY ANALIZY</div>'
+        '</div>', unsafe_allow_html=True)
     ensure_dataset()
     cfg = SimilarityConfig(
         threshold=st.slider("Próg podobieństwa (krawędź grafu)", 0.1, 0.9, 0.45, 0.05),
@@ -74,12 +390,18 @@ with st.sidebar:
         },
     )
 
-    st.divider()
-    st.subheader("📥 Materiały")
-    if st.session_state.materials:
-        st.caption(f"{len(st.session_state.materials)} materiałów w zbiorze")
+    st.markdown('<div class="kf-side-sep"></div>', unsafe_allow_html=True)
+    _count = (f"{len(st.session_state.materials)} materiałów w zbiorze"
+              if st.session_state.materials else "zbiór pusty")
+    st.markdown(
+        '<div class="kf-side-head">'
+        '<span class="kf-side-kicker">// input</span>'
+        '<div class="kf-side-title sm">MATERIAŁY</div>'
+        f'<div class="kf-side-count">{_count}</div>'
+        '</div>', unsafe_allow_html=True)
 
-    st.markdown("**Dodaj pojedynczy materiał:**")
+    st.markdown('<div class="kf-lbl">▸ dodaj pojedynczy materiał</div>',
+                unsafe_allow_html=True)
     in_url = st.text_input("Adres URL (reklama / strona)", key="new_url")
     in_text = st.text_area("Lub treść reklamy (tekst)", key="new_text")
     up_img = st.file_uploader("Lub zrzut ekranu / kreatyw", type=["png", "jpg", "jpeg"],
@@ -101,10 +423,12 @@ with st.sidebar:
             st.warning("Podaj URL, tekst lub plik obrazu.")
         st.rerun()
 
-    st.divider()
-    up_json = st.file_uploader("Import zbioru (JSON Lines / CSV)", type=["jsonl", "json"],
+    st.markdown('<div class="kf-side-sep"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="kf-lbl">▸ import zbioru (JSON Lines / CSV)</div>',
+                unsafe_allow_html=True)
+    up_json = st.file_uploader("Plik zbioru", type=["jsonl", "json"],
                                key="bulk")
-    if up_json and st.button("wczytaj zbiór z pliku"):
+    if up_json and st.button("wczytaj zbiór z pliku", use_container_width=True):
         try:
             records = [json.loads(l) for l in up_json.getvalue().decode().splitlines() if l.strip()]
             load_materials(records)
@@ -126,6 +450,14 @@ features = st.session_state.features
 with st.spinner("Buduję podobieństwa i klastry..."):
     clusters, links = build_clusters(features, cfg)
 
+# pasek metryk
+_m = st.columns(4)
+_hard = sum(1 for l in links if l.strong_signals)
+_m[0].metric("MATERIAŁY", len(features))
+_m[1].metric("KAMPANIE", len(clusters))
+_m[2].metric("POWIĄZANIA", len(links))
+_m[3].metric("TWARDE SYGNAŁY", _hard)
+
 tabs = st.tabs(["🗺️ Kampanie", "🕸️ Graf zależności", "🧬 Cechy materiałów",
                 "🔍 Nowy materiał", "📘 Metodyka"])
 
@@ -138,11 +470,19 @@ with tabs[0]:
         col = c_cols[i % 3]
         size = len(c.members)
         with col:
-            kind = "🚩 kampania" if size > 1 else "⚫ pojedynczy incydent"
-            st.markdown(f"**{c.cluster_id}** — {kind}, {size} mat.")
-            st.markdown("`" + "  ".join(c.members) + "`")
+            is_camp = size > 1
+            cls = "kf-card campaign" if is_camp else "kf-card solo"
+            badge_cls = "kf-badge camp" if is_camp else "kf-badge inc"
+            badge = "KAMPANIA · {} mat.".format(size) if is_camp else "POJEDYNCZY INCYDENT"
+            chips = " ".join(f'<span class="kf-chip">{m}</span>' for m in c.members)
+            st.markdown(
+                f'<div class="{cls}">'
+                f'<div class="kf-card-top"><span class="kf-id">{c.cluster_id}</span>'
+                f'<span class="{badge_cls}">{badge}</span></div>'
+                f'<div class="kf-members">{chips}</div></div>',
+                unsafe_allow_html=True)
             if c.links:
-                with st.expander(f"Przesłanki powiązań ({len(c.links)})"):
+                with st.expander(f"⚡ Przesłanki powiązań ({len(c.links)})"):
                     for l in sorted(c.links, key=lambda x: -x.score)[:8]:
                         strong = " ｜ ".join(l.strong_signals) or ""
                         st.markdown(
@@ -167,17 +507,73 @@ with tabs[0]:
 
 with tabs[1]:
     st.subheader("Graf zależności (krawędzie = wykryte powiązania)")
-    edges = []
-    for l in links:
-        color = "red" if l.strong_signals else "steelblue"
-        label = f"{l.score:.2f}"
-        edges.append(f'  "{l.a}" -> "{l.b}" [label="{label}", color="{color}", '
-                     f'fontcolor="{color}"];')
-    dot = ("digraph kampanie {\n  rankdir=LR;\n  node [shape=box, style=rounded, "
-           "fontsize=11];\n  edge [fontsize=9];\n" + "\n".join(edges) + "\n}\n")
-    st.graphviz_chart(dot)
-    st.caption("Czerwone krawędzie = twarde sygnały (ta sama domena rejestrowa, "
-               "near-duplikat obrazu, duplikat tekstu). Granatowe = podobieństwo ważone.")
+
+    def render_interactive_graph():
+        """Animowany graf pyvis (ruchome węzły, fizyka) w neonowej zieleni;
+        fallback: statyczny graphviz, gdy pyvis niedostępne."""
+        try:
+            from pyvis.network import Network
+            net = Network(height="620px", width="100%", bgcolor="#0b101a",
+                          font_color="#c9ffe0", directed=False, cdn_resources="in_line")
+            palette = ["#00ff9c", "#61ffb0", "#00e582", "#39d98a", "#0fd9a3",
+                       "#00c77c", "#0aa868", "#7dfff2", "#0a8f66", "#1fd9c9"]
+            cmap = {}
+            for i, c in enumerate(sorted(clusters, key=lambda x: -len(x.members))):
+                for m in c.members:
+                    cmap[m] = palette[i % len(palette)]
+            for m, f in zip(st.session_state.materials, st.session_state.features):
+                tip = (f"<b>{f.id}</b><br>źródło: {m.source}"
+                       + (f"<br>domena: {f.registrable_domain}" if f.registrable_domain else "")
+                       + (f"<br>słowa: {', '.join(sorted(f.keywords)[:6])}" if f.keywords else ""))
+                net.add_node(f.id, label=f.id,
+                             color=cmap.get(f.id, "#2e5c47"),
+                             title=tip, shape="dot", borderWidth=1,
+                             font={"color": "#c9ffe0", "size": 12})
+            for l in links:
+                strong = bool(l.strong_signals)
+                edge_col = ({"color": "#00ff9c", "highlight": "#7dfff2"} if strong
+                            else {"color": "#0aa868", "highlight": "#00ff9c"})
+                tip = (f"score=<b>{l.score}</b> (ufność {l.confidence})"
+                       + (f"<br>⚡ <b>{' | '.join(l.strong_signals)}</b>" if strong else "")
+                       + "".join(f"<br>• [{e.kind}] {e.description}: {e.score}"
+                                 for e in sorted(l.reasons, key=lambda x: -x.score)[:4]))
+                net.add_edge(l.a, l.b, value=round(l.score * 10, 1), title=tip,
+                             color=edge_col, width=2 if strong else 1,
+                             dashes=False if strong else True)
+            options = json.dumps({
+                "physics": {"barnesHut": {"gravitationalConstant": -4000,
+                                          "springLength": 120}},
+                "nodes": {"shadow": {"enabled": True, "size": 8,
+                                     "color": "rgba(0,255,156,0.35)"}}})
+            json.loads(options)
+            net.set_options(options)
+            out = "/tmp/kolekcjoner_graf.html"
+            net.write_html(out)
+            st.components.v1.html(Path(out).read_text(encoding="utf-8"),
+                                  height=660, scrolling=True)
+            return True
+        except Exception as e:  # pyvis niedostępne itp.
+            st.caption(f"Graf interaktywny niedostępny ({type(e).__name__}) — "
+                       "pokazuję wersję statyczną.")
+            return False
+
+    if not render_interactive_graph():
+        edges = []
+        for l in links:
+            color = "#00ff9c" if l.strong_signals else "#0aa868"
+            edge = f'{l.score:.2f}'
+            edges.append(f'  "{l.a}" -> "{l.b}" [label="{edge}", color="{color}", '
+                         f'fontcolor="{color}"];')
+        dot = ("digraph kampanie {\n  rankdir=LR;\n  bgcolor=\"#0b101a\";\n"
+               "  node [shape=box, style=\"rounded,filled\", fillcolor=\"#0d1420\", "
+               "color=\"#00ff9c\", fontcolor=\"#c9ffe0\", fontsize=11];\n"
+               "  edge [fontsize=9];\n" + "\n".join(edges) + "\n}\n")
+        st.graphviz_chart(dot)
+    st.caption("Kulki = materiały (odcień neonu = kampania, ciemne = pojedyncze). "
+               "Jasnozielone krawędzie = twarde sygnały (ta sama domena rejestrowa, "
+               "near-duplikat obrazu, duplikat tekstu). Ciemnozielone przerywane = "
+               "podobieństwo ważone. Najedź na węzeł/krawędź po szczegóły; graf można "
+               "przesuwać i przybliżać.")
 
 # ------------------------------------------------------------- cechy
 
@@ -197,7 +593,10 @@ with tabs[2]:
             IP=f.ip or "—",
             modaliwości=",".join(sorted(f.available_modalities)),
         ))
-    st.dataframe(rows, use_container_width=True)
+    try:
+        st.dataframe(rows, width="stretch")
+    except Exception:
+        st.markdown(features_table_html(rows), unsafe_allow_html=True)
     st.caption("Braki danych (martwa domena, brak zrzutu) nie dyskwalifikują materiału — "
                "porównanie liczy się po dostępnych modaliowościach.")
 
