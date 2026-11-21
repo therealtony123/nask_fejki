@@ -38,6 +38,7 @@ Cztery niezależne widoki cech:
 | **tekst** | tytuł (znormalizowany), treść strony, meta description/keywords, tekst z OCR zrzutów ekranu | HTML (BeautifulSoup), OCR (tesseract `pol+eng`) |
 | **wizja** | perceptual hashe (DCT-pHash + dHash, 64 bity), kolory dominujące, wymiary | każdy obraz incydentu (PIL+numpy+scipy) |
 | **infrastruktura** | domeny (pełne i rejestrowalne), ID trackerów (GA/GTM/Pixel/Clarity), usługi śledzące, łańcuchy przekierowań | HTML (linki, skrypty), HAR (każdy request/response) |
+| **wzorce domen** | TLD, segmentacja, słowopodobieństwo, entropia nazwy (np. `słowo-słowo` w nietypowym TLD) — schemat nazewniczy rzadko zmieniany przez operatora | analiza nazw domen rejestrowalnych |
 | **struktura** | klasy CSS, skrypty JS, favicon md5 | HTML |
 
 Dodatkowo: md5 plików wideo i metadane z plików `.info.json` (np. ID reklamy
@@ -56,7 +57,10 @@ Każdą parę incydentów porównuje się niezależnie w widokach:
 - **infrastruktura** (waga 0.20) — Jaccard zbioru domen rejestrowalnych;
 - **treść** (waga 0.15) — cosinus TF-IDF n-gramów znakowych (2–4 znaki;
   odporne na polską fleksję, brak zależności od języka modelu);
-- **struktura** (waga 0.10) — Jaccard klas CSS (wspólny szablon produkcyjny).
+- **struktura** (waga 0.10) — Jaccard klas CSS (wspólny szablon produkcyjny);
+- **wzorce domen** (waga 0.08) — wspólny schemat nazw domen (TLD + klasy
+  nazewnicze + entropia), z pominięciem platform/CDN; słaby sygnał, liczony
+  maks. jako 0.5, więc sam nie tworzy krawędzi — pomaga przy łączeniu z innymi.
 
 **Kluczowa własność (niekompletne dane):** wagi są normalizowane wyłącznie do
 widoków dostępnych *w obu* porównywanych materiałach. Brakująca cecha nie obniża
@@ -99,6 +103,21 @@ Po klastrowaniu pipeline generuje dwa artefakty wdrożeniowe:
 
 Oba pliki są do pobrania w zakładce „Eksport (STIX/IoC)" demonstratora i mogą
 trafić wprost do MISP/OpenCTI.
+
+### 1.7 Interpretowalność w obie strony
+
+Każda para materiałów ma jawne **przesłanki ZA i PRZECIW** połączeniu (zakładka
+„Kampanie" → „Dlaczego materiały NIE zostały połączone?"). Brakujące dane są
+komunikowane wprost — analityk widzi, że rozdzielenie wynika z dowodów, a nie
+z braku informacji.
+
+### 1.8 Bonus: biblioteka reklam
+
+Opcjonalna integracja z **Meta Ad Library API** (zakładka „Biblioteka reklam"):
+wyszukiwanie reklam wg słów kluczowych (np. „zarabiaj z domu") i porównywanie
+ich treści ze znanymi kampaniami. Wymaga tokena Graph API (instrukcja w
+`kfk/adlibrary.py`); bez tokena zakładka działa na zapisanej próbce
+`data/meta_ads_sample.json`.
 
 ---
 

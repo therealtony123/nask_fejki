@@ -1,6 +1,7 @@
 """Pozyskiwanie i wyodrębnianie cech incydentów (tekst, wizja, infrastruktura, struktura)."""
 import hashlib
 import json
+import math
 import re
 import subprocess
 from collections import Counter
@@ -263,6 +264,60 @@ def registrable(host: str) -> str:
     return host
 
 
+# platformy/CDN/ad-tech — ich wzorce nazw nie mówią nic o operatorze kampanii
+KNOWN_PLATFORMS = {"facebook.com", "facebook.net", "google.com", "google.pl",
+                   "googleapis.com", "gstatic.com", "doubleclick.net",
+                   "googletagmanager.com", "jsdelivr.net", "cloudflare.com",
+                   "unpkg.com", "jquery.com", "unsplash.com", "netlify.app",
+                   "er-api.com", "b-cdn.net", "translate.google.com"}
+
+
+def domain_patterns(registrable_domains):
+    """Cechy wzorca nazw domen: TLD, segmentacja, słowopodobieństwo, entropia.
+
+    Scam-domeny często powstają wg jednego schematu (np. słowo-słowo w nietypowym
+    TLD albo losowe litery) — wzorzec nazewniczy jest dodatkowym, rzadko zmienianym
+    śladem operatora kampanii.
+    """
+    from collections import Counter
+    out = []
+    for d in registrable_domains:
+        if d in KNOWN_PLATFORMS:
+            continue
+        sld, _, tld = d.partition(".")
+        if not tld:
+            sld, tld = d, ""
+        segs = [s for s in re.split(r"[-_]", sld) if s]
+        ent = 0.0
+        if sld:
+            cnt = Counter(sld)
+            n = len(sld)
+            ent = -sum((c / n) * math.log2(c / n) for c in cnt.values())
+
+        def wordlike(s):
+            if not s or len(s) < 3:
+                return False
+            v = sum(1 for ch in s if ch in "aeiouy")
+            ratio = v / len(s)
+            return 0.2 <= ratio <= 0.6 and not re.search(r"[bcdfghjklmnpqrstvwxz]{4,}", s)
+
+        classes = []
+        if len(segs) >= 2:
+            classes.append("multi-segment")
+        if "-" in sld:
+            classes.append("hyphen")
+        classes.append("wordlike" if all(wordlike(s) for s in segs) else "nonwordlike")
+        if ent >= 3.5:
+            classes.append("high-entropy")
+        elif ent <= 2.6:
+            classes.append("low-entropy")
+        pattern = f"{'|'.join(sorted(set(classes)))}|tld:{tld}"
+        out.append({"domain": d, "sld": sld, "tld": tld,
+                    "entropy": round(ent, 2), "classes": sorted(set(classes)),
+                    "pattern": pattern})
+    return out
+
+
 def extract_incident(inc: dict) -> dict:
     """Łączy cechy wszystkich plików incydentu w jeden wektor cech."""
     feats = {
@@ -351,6 +406,7 @@ def extract_incident(inc: dict) -> dict:
     # finalne porządki
     feats["infra"]["domains"] = sorted(set(d.lower() for d in feats["infra"]["domains"]))
     feats["infra"]["registrable"] = sorted({registrable(d) for d in feats["infra"]["domains"]})
+    feats["infra"]["domain_patterns"] = domain_patterns(feats["infra"]["registrable"])
     feats["infra"]["tracker_ids"] = sorted(set(feats["infra"]["tracker_ids"]))
     feats["infra"]["tracker_services"] = sorted(feats["infra"]["tracker_services"])
     feats["structure"]["css_classes"] = sorted(set(feats["structure"]["css_classes"]))
@@ -386,5 +442,6 @@ def extract_from_url_text(url: str, html: str, redirects: list) -> dict:
             doms.add(m.group(1).lower())
     feats["infra"]["domains"] = sorted(doms)
     feats["infra"]["registrable"] = sorted({registrable(d) for d in doms})
+    feats["infra"]["domain_patterns"] = domain_patterns(feats["infra"]["registrable"])
     feats["text"]["body_norm"] = norm_text(h["body"])
     return feats

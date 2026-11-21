@@ -15,6 +15,7 @@ VIEW_WEIGHTS = {
     "infra": 0.20,      # wspólne domeny rejestrowalne
     "trackers": 0.30,   # te same identyfikatory analityki (GA/Pixel/GTM) — bardzo silny sygnał
     "structure": 0.10,  # wspólny szablon HTML (klasy CSS, skrypty, favicon)
+    "domain_pattern": 0.08,  # wspólny wzorzec nazw domen (TLD + schemat nazewniczy)
 }
 EDGE_THRESHOLD = 0.25       # próg tworzenia krawędzi
 PHASH_MAX_DIST = 12
@@ -141,6 +142,21 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
                                   [f"wspólny szablon HTML (jaccard klas CSS: {jc:.2f})"])
         else:
             views["structure"] = (0.0, [])
+    # 7. wzorce nazw domen — słaby sygnał, pomocny w połączeniu z innymi
+    pa = [d["pattern"] for d in fa["infra"].get("domain_patterns", [])]
+    pb = [d["pattern"] for d in fb["infra"].get("domain_patterns", [])]
+    if pa and pb:
+        shared = set(pa) & set(pb)
+        if shared:
+            ex_a = next(d for d in fa["infra"]["domain_patterns"] if d["pattern"] in shared)
+            ex_b = next(d for d in fb["infra"]["domain_patterns"] if d["pattern"] in shared)
+            views["domain_pattern"] = (
+                0.5,
+                [f"wspólny wzorzec nazw domen: {ex_a['domain']} ≈ {ex_b['domain']} "
+                 f"({ex_a['tld']}, {','.join(ex_a['classes'])})"],
+            )
+        else:
+            views["domain_pattern"] = (0.0, [])
     # twarde przesłanki
     hard = []
     if ta and tb and ta == tb:
@@ -150,6 +166,28 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
     if "images" in views and views["images"][0] >= 0.5:
         hard.append("warianty graficzne")
     return views, hard
+
+
+def negative_evidence(fa: dict, fb: dict, tfidf: Tfidf) -> list:
+    """Przesłanki PRZECIWKO połączeniu — widoki z danymi po obu stronach, ale zerowym
+    wynikiem. Pokazują analitykowi, dlaczego materiały pozostały rozdzielone
+    (odporność na fałszywe połączenia)."""
+    views, _ = view_scores(fa, fb, tfidf)
+    neg = []
+    if "title" in views and views["title"][0] == 0:
+        neg.append(f"różne tytuły: «{(fa['text'].get('title') or '')[:60]}» vs "
+                   f"«{(fb['text'].get('title') or '')[:60]}»")
+    if "infra" in views and views["infra"][0] == 0:
+        neg.append("brak wspólnych domen rejestrowalnych")
+    if "trackers" in views and views["trackers"][0] == 0:
+        neg.append("różne identyfikatory analityki (brak wspólnych GA/Pixel/GTM)")
+    if "images" in views and views["images"][0] == 0:
+        neg.append("brak pasujących wariantów graficznych (odległość hashów > próg)")
+    if "structure" in views and views["structure"][0] == 0:
+        neg.append("różne szablony HTML (rozłączne klasy CSS)")
+    if "domain_pattern" in views and views["domain_pattern"][0] == 0:
+        neg.append("różne wzorce nazw domen (inne TLD/schematy nazewnicze)")
+    return neg
 
 
 def pair_similarity(fa: dict, fb: dict, tfidf: Tfidf) -> dict:
