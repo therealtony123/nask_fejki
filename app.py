@@ -110,8 +110,36 @@ section[data-testid="stSidebar"] {
   border-right: 1px solid #16202e;
   box-shadow: -12px 0 34px rgba(0,0,0,.45);
 }
-section[data-testid="stSidebar"] .block-container { padding-top: 1.1rem; }
+section[data-testid="stSidebar"] .block-container { padding-top: .55rem; }
 section[data-testid="stSidebar"] hr { border-color: #1c2634; }
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: .3rem; }
+
+/* nagłówki sekcji w sidebarze */
+.kf-side-head { margin: 0 0 .9rem; }
+.kf-side-kicker { display: block; color: #4d5c6e; font-size: .58rem;
+                  letter-spacing: .26em; margin-bottom: 3px; }
+.kf-side-title {
+  color: #00ff9c; font-size: 1.02rem; font-weight: 800; letter-spacing: .09em;
+  text-shadow: 0 0 14px rgba(0, 255, 156, .4);
+  border-bottom: 1px solid #1c2634; padding-bottom: 9px;
+}
+.kf-side-title.sm { color: #8ad8ff; font-size: .92rem;
+                   text-shadow: 0 0 12px rgba(0, 217, 255, .3); }
+.kf-side-count { color: #7d8ca1; font-size: .68rem; margin-top: 7px; }
+.kf-side-sep { height: 1px; margin: 1.35rem 0 .6rem;
+               background: linear-gradient(90deg, #1c2634, transparent); }
+.kf-lbl { color: #c9d1d9; font-size: .76rem; letter-spacing: .06em;
+          margin: .55rem 0 .45rem; }
+.kf-lbl b { color: #00ff9c; }
+
+/* odstępy widgetów w sidebarze */
+section[data-testid="stSidebar"] [data-testid="stSlider"] { margin: .3rem 0 1.35rem; }
+section[data-testid="stSidebar"] [data-testid="stSlider"] label { font-size: .72rem; }
+section[data-testid="stSidebar"] [data-testid="stTextInput"],
+section[data-testid="stSidebar"] [data-testid="stTextArea"] { margin: .3rem 0 1.05rem; }
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] { margin: .3rem 0 1.2rem; }
+section[data-testid="stSidebar"] div[data-testid="stWidgetLabel"] p { font-size: .72rem; }
+section[data-testid="stSidebar"] [data-testid="stButton"] { margin: .15rem 0 .45rem; }
 
 /* ---------- metryki ---------- */
 [data-testid="stMetric"] {
@@ -345,7 +373,11 @@ def add_material(m: Material):
 # ------------------------------------------------------------- sidebar
 
 with st.sidebar:
-    st.header("⚙️ Parametry analizy")
+    st.markdown(
+        '<div class="kf-side-head">'
+        '<span class="kf-side-kicker">// config</span>'
+        '<div class="kf-side-title">PARAMETRY ANALIZY</div>'
+        '</div>', unsafe_allow_html=True)
     ensure_dataset()
     cfg = SimilarityConfig(
         threshold=st.slider("Próg podobieństwa (krawędź grafu)", 0.1, 0.9, 0.45, 0.05),
@@ -358,12 +390,18 @@ with st.sidebar:
         },
     )
 
-    st.divider()
-    st.subheader("📥 Materiały")
-    if st.session_state.materials:
-        st.caption(f"{len(st.session_state.materials)} materiałów w zbiorze")
+    st.markdown('<div class="kf-side-sep"></div>', unsafe_allow_html=True)
+    _count = (f"{len(st.session_state.materials)} materiałów w zbiorze"
+              if st.session_state.materials else "zbiór pusty")
+    st.markdown(
+        '<div class="kf-side-head">'
+        '<span class="kf-side-kicker">// input</span>'
+        '<div class="kf-side-title sm">MATERIAŁY</div>'
+        f'<div class="kf-side-count">{_count}</div>'
+        '</div>', unsafe_allow_html=True)
 
-    st.markdown("**Dodaj pojedynczy materiał:**")
+    st.markdown('<div class="kf-lbl">▸ dodaj pojedynczy materiał</div>',
+                unsafe_allow_html=True)
     in_url = st.text_input("Adres URL (reklama / strona)", key="new_url")
     in_text = st.text_area("Lub treść reklamy (tekst)", key="new_text")
     up_img = st.file_uploader("Lub zrzut ekranu / kreatyw", type=["png", "jpg", "jpeg"],
@@ -385,10 +423,12 @@ with st.sidebar:
             st.warning("Podaj URL, tekst lub plik obrazu.")
         st.rerun()
 
-    st.divider()
-    up_json = st.file_uploader("Import zbioru (JSON Lines / CSV)", type=["jsonl", "json"],
+    st.markdown('<div class="kf-side-sep"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="kf-lbl">▸ import zbioru (JSON Lines / CSV)</div>',
+                unsafe_allow_html=True)
+    up_json = st.file_uploader("Plik zbioru", type=["jsonl", "json"],
                                key="bulk")
-    if up_json and st.button("wczytaj zbiór z pliku"):
+    if up_json and st.button("wczytaj zbiór z pliku", use_container_width=True):
         try:
             records = [json.loads(l) for l in up_json.getvalue().decode().splitlines() if l.strip()]
             load_materials(records)
