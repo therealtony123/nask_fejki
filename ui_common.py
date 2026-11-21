@@ -358,6 +358,21 @@ def render_graph(graph, mode: str = "hub"):
     });
     open = {};
   }
+  // przeciąganie kart: podczas ciągnięcia zdejmujemy kotwicę, po upuszczeniu wraca
+  network.on("dragStart", function (p) {
+    (p.nodes || []).forEach(function (nid) {
+      if (nid.indexOf("__kf_popup_") === 0) {
+        network.body.data.nodes.update({ id: nid, fixed: { x: false, y: false } });
+      }
+    });
+  });
+  network.on("dragEnd", function (p) {
+    (p.nodes || []).forEach(function (nid) {
+      if (nid.indexOf("__kf_popup_") === 0) {
+        network.body.data.nodes.update({ id: nid, fixed: { x: true, y: true } });
+      }
+    });
+  });
   network.on("click", function (p) {
     if (p.nodes.length) {
       var nid = p.nodes[0];
