@@ -6,8 +6,9 @@ from ui_common import render_graph
 
 head_box("MAPA POWIĄZAŃ", "// kolekcjoner fejków / graf")
 guide_box([
-    "Kolor węzła = kampania; rozmiar = liczba powiązań; czerwona krawędź = twarde przesłanki.",
-    "Najedź na węzeł/krawędź, aby zobaczyć tytuł, kampanię i dowody.",
+    "Kampania = kwadratowy hub; szprychy łączą go z materiałami (grubość = siła powiązania, "
+    "czerwony = twarde przesłanki).",
+    "Najedź na węzeł/szprychę — karta pokaże tytuł, domeny, wizerunki, trackery i dowody.",
     "Graf się rusza — klastry rozchodzą się same. Przeciągnij węzły, jeśli chcesz ułożyć je po swojemu.",
 ])
 
@@ -15,9 +16,9 @@ graph = st.session_state.get("graph")
 if not graph:
     st.info("Brak wyników — uruchom analizę na stronie Start (panel boczny).")
     st.stop()
-collapse = st.toggle("Zwiń kampanie do bąbelków (czytelny widok)",
-                     value=False,
-                     help="Każda kampania = jeden bąbelek z liczbą materiałów; "
-                          "podwójne kliknięcie rozwija kampanię. Wyłączone = pełny "
-                          "graf ze wszystkimi połączeniami.")
-render_graph(graph, collapse=collapse)
+full_edges = st.toggle("Pełny graf krawędzi (materiał–materiał)",
+                       value=False,
+                       help="Domyślnie: kampanie jako huby ze szprychami — czytelny "
+                            "widok bez spaghetti. Włącz, aby zobaczyć każdą krawędź "
+                            "między materiałami.")
+render_graph(graph, mode="full" if full_edges else "hub")

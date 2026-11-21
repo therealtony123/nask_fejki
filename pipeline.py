@@ -65,7 +65,11 @@ def run(data_root, db_path, threshold=0.25, verbose=True):
     graph = {
         "nodes": [{"id": f["id"], "title": f["text"]["title"][:80],
                    "first_seen": spans[f["id"]][0], "last_seen": spans[f["id"]][1],
-                   "cluster": next((c["cluster_id"] for c in clusters if f["id"] in c["members"]), None)}
+                   "cluster": next((c["cluster_id"] for c in clusters if f["id"] in c["members"]), None),
+                   "domains": f["infra"]["registrable"],
+                   "faces": [p["name"] for p in f.get("faces", {}).get("persons", [])],
+                   "trackers": f["infra"]["tracker_ids"],
+                   "n_images": len(f["images"]), "n_files": f.get("n_files", 0)}
                   for f in feats],
         "edges": [{"a": e["a"], "b": e["b"], "score": e["score"], "hard": e["hard"],
                    "evidence": e["evidence"]} for e in edges],

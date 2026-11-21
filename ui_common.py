@@ -58,7 +58,11 @@ def run_analysis(data, db, threshold):
         "nodes": [{"id": f["id"], "title": f["text"]["title"][:80],
                    "first_seen": spans[f["id"]][0], "last_seen": spans[f["id"]][1],
                    "cluster": next((c["cluster_id"] for c in clusters
-                                    if f["id"] in c["members"]), None)}
+                                    if f["id"] in c["members"]), None),
+                   "domains": f["infra"]["registrable"],
+                   "faces": [p["name"] for p in f.get("faces", {}).get("persons", [])],
+                   "trackers": f["infra"]["tracker_ids"],
+                   "n_images": len(f["images"]), "n_files": f.get("n_files", 0)}
                   for f in feats],
         "edges": [{"a": e["a"], "b": e["b"], "score": e["score"], "hard": e["hard"],
                    "evidence": e["evidence"]} for e in edges],
@@ -70,7 +74,38 @@ def run_analysis(data, db, threshold):
     return graph
 
 
-def render_graph(graph, collapse: bool = False):
+def _tt_card(inner: str, min_w: int = 280) -> str:
+    return (f"<div style='min-width:{min_w}px;max-width:440px;background:#0c1220;"
+            f"border:1px solid #223047;border-radius:6px;padding:10px 12px;"
+            f"font:12.5px/1.6 Consolas,monospace;color:#cdd7e0'>{inner}</div>")
+
+
+def _tt_node(n: dict, deg_n: int) -> str:
+    rows = []
+    for label, val, maxlen in (("DOMENY", n.get("domains"), 8),
+                               ("WIZERUNKI", n.get("faces"), 6),
+                               ("TRACKERY", n.get("trackers"), 6)):
+        if val:
+            rows.append(f"<div style='margin-top:6px'><b style='color:#8b98a5'>"
+                        f"{label}</b><br>{', '.join(v for v in val[:maxlen]) or '—'}</div>")
+    inner = (
+        f"<div style='font-size:15px;font-weight:bold;color:#00ff9c'>{n['id']} · "
+        f"KAMPANIA {n.get('cluster') or '—'}</div>"
+        f"<div style='margin:5px 0 2px;color:#e6edf3'>{n['title']}</div>"
+        + "".join(rows) +
+        f"<div style='margin-top:8px;color:#5b7bd5'>powiązań: {deg_n} · pliki: "
+        f"{n.get('n_files', '—')} · obrazy: {n.get('n_images', '—')} · "
+        f"od: {(n.get('first_seen') or '—')[:10]}</div>")
+    return _tt_card(inner)
+
+
+def render_graph(graph, mode: str = "hub"):
+    """Graf kampanii.
+
+    mode='hub' (domyślny): kampania = hub + szprychy do materiałów — gęste kliki
+    bez spaghetti, połączenia cały czas widoczne.
+    mode='full': wszystkie krawędzie materiał–materiał.
+    """
     try:
         from pyvis.network import Network
         net = Network(height="600px", width="100%", bgcolor="#0e1117",
@@ -92,31 +127,73 @@ def render_graph(graph, collapse: bool = False):
                 hidden += 1  # pojedyncze, niepołączone materiały — ukrywamy
                 continue
             size = 12 + 16 * (deg.get(n["id"], 0) / max_deg)
-            seen = (n.get("first_seen") or "—")[:10]
-            title = (
-                f"{n['id']} · kampania {n.get('cluster', '—')}<br>"
-                f"{n['title']}<br>"
-                f"powiązań: {deg.get(n['id'], 0)} · pierwsza aktywność: {seen}")
-            node_kwargs = dict(
-                label=n["id"], shape="dot", size=size, borderWidth=2,
+            net.add_node(
+                n["id"], label=n["id"], shape="dot", size=size, borderWidth=2,
                 color={"background": colors.get(n["id"], "#555555"),
                        "border": "#ffffff",
                        "highlight": {"background": colors.get(n["id"], "#555555"),
                                      "border": "#ffd34b"}},
                 font={"size": 15, "color": "#fafafa", "face": "monospace"},
-                title=title)
-            if collapse:
-                node_kwargs["group"] = n.get("cluster") or "pojedyncze"
-            net.add_node(n["id"], **node_kwargs)
-        for e in graph["edges"]:
-            if deg.get(e["a"], 0) == 0 or deg.get(e["b"], 0) == 0:
-                continue
-            ev = "<br>".join(e["evidence"][:4])
-            net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
-                         title=(f"{e['a']} ↔ {e['b']} — score={e['score']:.3f}"
-                                f"{' [TWARDE]' if e['hard'] else ''}<br>{ev}"),
-                         color="#ff6b6b" if e["hard"] else "#5b7bd5",
-                         width=1 + 4 * e["score"])
+                title=_tt_node(n, deg.get(n["id"], 0)))
+        if mode == "hub":
+            for c in graph["clusters"]:
+                members = [m for m in c["members"] if deg.get(m, 0) > 0]
+                if len(members) < 2:
+                    continue
+                col = colors.get(members[0], "#4bb3ff")
+                hub_title = _tt_card(
+                    f"<div style='font-size:16px;font-weight:bold;color:{col}'>"
+                    f"{c['cluster_id']} — KAMPANIA · {len(members)} materiałów</div>"
+                    f"<div style='margin:5px 0;color:#e6edf3'>{c['label'][:160]}</div>"
+                    f"<div style='margin-top:6px'><b style='color:#8b98a5'>CZŁONKOWIE</b><br>"
+                    f"{', '.join(members[:12])}</div>"
+                    f"<div style='margin-top:8px;color:#5b7bd5'>średnie podobieństwo "
+                    f"{c['mean_score']} · twarde powiązania: {c['hard_links']}</div>")
+                net.add_node(
+                    c["cluster_id"], label=c["cluster_id"], shape="box",
+                    size=22 + 6 * len(members), borderWidth=2, mass=2 + 2 * len(members),
+                    color={"background": "#0c1220", "border": col,
+                           "highlight": {"background": "#122033", "border": "#ffd34b"}},
+                    font={"size": 18, "color": col, "face": "monospace"},
+                    title=hub_title)
+                for m in members:
+                    best = None
+                    for e in graph["edges"]:
+                        if (m in (e["a"], e["b"]) and e["a"] in c["members"]
+                                and e["b"] in c["members"]):
+                            if best is None or e["score"] > best["score"]:
+                                best = e
+                    if best is None:
+                        net.add_edge(c["cluster_id"], m, width=2, color="#33415c",
+                                     title=f"{m} — kampania {c['cluster_id']}")
+                        continue
+                    other = best["b"] if best["a"] == m else best["a"]
+                    ev = "".join(f"<div style='margin-top:4px'>• {x}</div>"
+                                 for x in best["evidence"][:4])
+                    net.add_edge(
+                        c["cluster_id"], m, value=round(best["score"] * 10, 1),
+                        width=1 + 4 * best["score"],
+                        color="#ff6b6b" if best["hard"] else "#5b7bd5",
+                        title=_tt_card(
+                            f"<div style='font-size:13px;font-weight:bold;"
+                            f"color:{'#ff6b6b' if best['hard'] else '#5b7bd5'}'>"
+                            f"{m} ↔ {other} · score {best['score']:.3f}"
+                            f"{' · TWARDE' if best['hard'] else ''}</div>{ev}"))
+        else:
+            for e in graph["edges"]:
+                if deg.get(e["a"], 0) == 0 or deg.get(e["b"], 0) == 0:
+                    continue
+                ev = "<br>".join(e["evidence"][:4])
+                net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
+                             title=_tt_card(
+                                 f"<div style='font-size:13px;font-weight:bold;"
+                                 f"color:{'#ff6b6b' if e['hard'] else '#5b7bd5'}'>"
+                                 f"{e['a']} ↔ {e['b']} · score {e['score']:.3f}"
+                                 f"{' · TWARDE' if e['hard'] else ''}</div>"
+                                 + "".join(f"<div style='margin-top:4px'>• {x}</div>"
+                                           for x in e["evidence"][:4])),
+                             color="#ff6b6b" if e["hard"] else "#5b7bd5",
+                             width=1 + 4 * e["score"])
         net.set_options(
             """{"physics": {"barnesHut": {"gravitationalConstant": -3000,
                                            "springLength": 140,
@@ -124,48 +201,12 @@ def render_graph(graph, collapse: bool = False):
                 "nodes": {"shadow": {"enabled": true, "size": 6,
                                      "color": "rgba(255,255,255,0.25)"}}}""")
         net.write_html("/tmp/kfk_graph.html")
-        html = Path("/tmp/kfk_graph.html").read_text(encoding="utf-8")
-        if collapse:
-            import json as _json
-            meta = {
-                c["cluster_id"]: (
-                    f"<b>{c['cluster_id']}</b> — {len(c['members'])} materiałów<br>"
-                    f"{c['label'][:140]}<br>"
-                    f"średnie podobieństwo: {c['mean_score']} · twarde: {c['hard_links']}<br>"
-                    f"członkowie: {', '.join(c['members'][:10])}")
-                for c in graph["clusters"] if len(c["members"]) > 1
-            }
-            js = """<script>
-(function () {
-  var meta = %s;
-  var groups = {};
-  network.body.data.nodes.forEach(function (n) {
-    if (n.group && n.group !== "pojedyncze") {
-      (groups[n.group] = groups[n.group] || []).push(n.id);
-    }
-  });
-  Object.keys(groups).forEach(function (g) {
-    var ids = groups[g];
-    if (ids.length > 1) {
-      network.clustering.cluster({
-        joinCondition: function (n) { return ids.indexOf(n.id) !== -1; },
-        clusterNodeProperties: {
-          label: g + " · " + ids.length + " materiałów",
-          title: meta[g] || (g + " — " + ids.length + " materiałów"),
-          shape: "dot", size: 36, borderWidth: 2,
-          color: {background: "#0c1220", border: "#00ff9c"},
-          font: {size: 17, color: "#00ff9c", face: "monospace"}
-        }
-      });
-    }
-  });
-})();
-</script>""" % _json.dumps(meta, ensure_ascii=False)
-            html = html.replace("</body>", js + "</body>")
-        st.components.v1.html(html, height=640, scrolling=True)
-        if collapse:
-            st.caption("Bąbelki = kampanie. Podwójne kliknięcie rozwija kampanię "
-                       "do pojedynczych materiałów.")
+        st.components.v1.html(Path("/tmp/kfk_graph.html").read_text(encoding="utf-8"),
+                              height=640, scrolling=True)
+        if mode == "hub":
+            st.caption("Kwadraty = kampanie (hub). Szprychy łączą kampanię z jej "
+                       "materiałami — najedź na szprychę, aby zobaczyć najsilniejsze "
+                       "przesłanki. Przełącznikiem wrócisz do pełnego grafu krawędzi.")
         if hidden:
             st.caption(f"Ukryto {hidden} pojedynczych materiałów bez powiązań "
                        "(pełna lista na stronie Incydenty).")

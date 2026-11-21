@@ -31,6 +31,12 @@ for i, c in enumerate(graph["clusters"]):
     for m in c["members"]:
         colors[m] = palette[i % len(palette)]
 
+
+def _tt_card(inner: str, min_w: int = 280) -> str:
+    return (f"<div style='min-width:{min_w}px;max-width:440px;background:#0c1220;"
+            f"border:1px solid #223047;border-radius:6px;padding:10px 12px;"
+            f"font:12.5px/1.6 Consolas,monospace;color:#cdd7e0'>{inner}</div>")
+
 deg = Counter()
 for e in graph["edges"]:
     deg[e["a"]] += 1
@@ -41,16 +47,24 @@ for n in graph["nodes"]:
     if deg.get(n["id"], 0) == 0:
         continue  # pojedyncze, niepołączone materiały — ukrywamy
     size = 12 + 16 * (deg.get(n["id"], 0) / max_deg)
-    seen = (n.get("first_seen") or "—")[:10]
     net.add_node(
         n["id"], label=n["id"], shape="dot", size=size, borderWidth=2,
         color={"background": colors.get(n["id"], "#555555"), "border": "#ffffff",
                "highlight": {"background": colors.get(n["id"], "#555555"),
                              "border": "#ffd34b"}},
         font={"size": 15, "color": "#fafafa", "face": "monospace"},
-        title=(f"{n['id']} · kampania {n.get('cluster', '—')}<br>"
-               f"{n['title']}<br>"
-               f"powiązań: {deg.get(n['id'], 0)} · pierwsza aktywność: {seen}"))
+        title=_tt_card(
+            f"<div style='font-size:15px;font-weight:bold;color:#00ff9c'>{n['id']} · "
+            f"KAMPANIA {n.get('cluster') or '—'}</div>"
+            f"<div style='margin:5px 0 2px;color:#e6edf3'>{n['title']}</div>"
+            + "".join(
+                f"<div style='margin-top:6px'><b style='color:#8b98a5'>{lbl}</b><br>"
+                f"{', '.join(v for v in (n.get(key) or [])[:8]) or '—'}</div>"
+                for lbl, key in (("DOMENY", "domains"), ("WIZERUNKI", "faces"),
+                                 ("TRACKERY", "trackers")))
+            + f"<div style='margin-top:8px;color:#5b7bd5'>powiązań: {deg.get(n['id'], 0)} · "
+              f"pliki: {n.get('n_files', '—')} · obrazy: {n.get('n_images', '—')} · "
+              f"od: {(n.get('first_seen') or '—')[:10]}</div>"))
 
 for e in graph["edges"]:
     if deg.get(e["a"], 0) == 0 or deg.get(e["b"], 0) == 0:
