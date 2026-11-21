@@ -281,6 +281,13 @@ def render_graph(graph, mode: str = "hub"):
         net.write_html("/tmp/kfk_graph.html")
         # panel szczegółów po kliknięciu (zwijany) + czarna skórka
         import json as _json
+        import subprocess
+        try:
+            _ver = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                                  capture_output=True, text=True, cwd=PROJ,
+                                  timeout=5).stdout.strip()
+        except Exception:
+            _ver = "?"
         _panel_css = ("position:absolute;z-index:9999;"
                       "max-width:400px;max-height:70vh;overflow:auto;"
                       "background:#000000;border:1px solid #00ff9c;border-radius:8px;"
@@ -290,12 +297,13 @@ def render_graph(graph, mode: str = "hub"):
         js = """<div id="kf-panel" style="%s"></div>
 <script>
 (function () {
-  var D = %s, E = %s, panel = document.getElementById("kf-panel"), last = null;
+  var D = %s, E = %s, V = "%s", panel = document.getElementById("kf-panel"), last = null;
   function show(html, key, x, y) {
     if (last === key) { panel.style.display = "none"; last = null; return; }
     panel.innerHTML = html +
       "<div style='margin-top:10px;text-align:right;color:#00ff9c;cursor:pointer' " +
-      "onclick='window.kfClose()'>✕ zamknij</div>";
+      "onclick='window.kfClose()'>✕ zamknij</div>" +
+      "<div style='margin-top:8px;font-size:10px;color:#3a4a5a'>graf v" + V + "</div>";
     panel.style.left = Math.min(x, window.innerWidth - 430) + "px";
     panel.style.top = Math.max(8, Math.min(y, window.innerHeight - 320)) + "px";
     panel.style.display = "block"; last = key;
@@ -316,7 +324,7 @@ def render_graph(graph, mode: str = "hub"):
   });
 })();
 </script>""" % (_panel_css, _json.dumps(detail, ensure_ascii=False),
-        _json.dumps(edetail, ensure_ascii=False))
+        _json.dumps(edetail, ensure_ascii=False), _ver)
         html = Path("/tmp/kfk_graph.html").read_text(encoding="utf-8")
         html = html.replace("</body>", js + "</body>")
         st.components.v1.html(html, height=640, scrolling=True)
