@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from kfk import (Tfidf, Store, build_edges, cluster_graph, extract_incident,
                  scan)
 from kfk.stix import build_bundle, export_ioc, incident_timespan
+from kfk.features import top_images
 
 
 def run(data_root, db_path, threshold=0.25, verbose=True):
@@ -68,9 +69,10 @@ def run(data_root, db_path, threshold=0.25, verbose=True):
                    "cluster": next((c["cluster_id"] for c in clusters if f["id"] in c["members"]), None),
                    "domains": f["infra"]["registrable"],
                    "faces": [p["name"] for p in f.get("faces", {}).get("persons", [])],
-                   "trackers": f["infra"]["tracker_ids"],
-                   "n_images": len(f["images"]), "n_files": f.get("n_files", 0)}
-                  for f in feats],
+                    "trackers": f["infra"]["tracker_ids"],
+                    "n_images": len(f["images"]), "n_files": f.get("n_files", 0),
+                    "img": top_images(f, 2)}
+                   for f in feats],
         "edges": [{"a": e["a"], "b": e["b"], "score": e["score"], "hard": e["hard"],
                    "evidence": e["evidence"]} for e in edges],
         "clusters": clusters,

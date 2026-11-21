@@ -9,6 +9,7 @@ import streamlit as st
 from kfk import (Store, Tfidf, assign_new_incident, extract_from_url_text,
                  extract_incident, pair_similarity, scan)
 from kfk.similarity import negative_evidence
+from kfk.features import top_images
 from kfk.skin import guide_box, head_box
 
 PROJ = Path(__file__).parent
@@ -61,9 +62,10 @@ def run_analysis(data, db, threshold):
                                     if f["id"] in c["members"]), None),
                    "domains": f["infra"]["registrable"],
                    "faces": [p["name"] for p in f.get("faces", {}).get("persons", [])],
-                   "trackers": f["infra"]["tracker_ids"],
-                   "n_images": len(f["images"]), "n_files": f.get("n_files", 0)}
-                  for f in feats],
+                    "trackers": f["infra"]["tracker_ids"],
+                    "n_images": len(f["images"]), "n_files": f.get("n_files", 0),
+                    "img": top_images(f, 2)}
+                   for f in feats],
         "edges": [{"a": e["a"], "b": e["b"], "score": e["score"], "hard": e["hard"],
                    "evidence": e["evidence"]} for e in edges],
         "clusters": clusters,
@@ -82,27 +84,7 @@ def _tt_card(inner: str, min_w: int = 280) -> str:
 
 def preview_images(f: dict, max_n: int = 6) -> list:
     """Najlepsze obrazy do podglądu incydentu (zrzuty > obrazy główne > największe)."""
-    base = Path(f["path"])
-    scored = []
-    for im in f.get("images", []):
-        p = base / im["path"]
-        if not p.is_file():
-            continue
-        name = p.name.lower()
-        score = 0
-        if "zrzut" in name or "screen" in name:
-            score += 100
-        if im.get("top"):
-            score += 50
-        if name.startswith(("img_00", "01-hero", "hero", "og-")):
-            score += 40
-        try:
-            score += min(p.stat().st_size // 100_000, 20)
-        except OSError:
-            pass
-        scored.append((score, p))
-    scored.sort(key=lambda x: -x[0])
-    return [p for _, p in scored[:max_n]]
+    return [Path(p) for p in top_images(f, max_n)]
 
 
 def title_map(graph) -> dict:
@@ -155,7 +137,7 @@ def render_graph(graph, mode: str = "hub"):
     """
     try:
         from pyvis.network import Network
-        net = Network(height="600px", width="100%", bgcolor="#000000",
+        net = Network(height="680px", width="100%", bgcolor="#000000",
                       font_color="#fafafa", directed=False, cdn_resources="in_line")
         palette = ["#ff4b4b", "#4bb3ff", "#ffd34b", "#4bff8c", "#c44bff", "#ff9d4b",
                    "#4bffd3", "#ff4bd3", "#8cff4b", "#4b8cff"]
@@ -170,6 +152,29 @@ def render_graph(graph, mode: str = "hub"):
         max_deg = max(deg.values()) or 1
         detail = {}   # pełne szczegóły węzłów (panel po kliknięciu)
         edetail = {}  # pełne szczegóły krawędzi (panel po kliknięciu)
+
+        def _thumbs(n: dict) -> str:
+            """Miniaturki materiału jako data-URI (podgląd w panelu jak w Kampaniach)."""
+            import base64
+            import io
+            try:
+                from PIL import Image
+            except ImportError:
+                return ""
+            out = ""
+            for p in (n.get("img") or [])[:2]:
+                try:
+                    im = Image.open(p).convert("RGB")
+                    im.thumbnail((220, 440))
+                    buf = io.BytesIO()
+                    im.save(buf, format="JPEG", quality=62)
+                    uri = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+                    out += (f"<img src='{uri}' style='max-width:200px;display:block;"
+                            f"margin:8px 0 0;border-radius:4px;border:1px solid #1f1f1f'>")
+                except Exception:
+                    continue
+            return out
+
         hidden = 0
         for n in graph["nodes"]:
             if deg.get(n["id"], 0) == 0:
@@ -182,9 +187,9 @@ def render_graph(graph, mode: str = "hub"):
                        "border": "#ffffff",
                        "highlight": {"background": colors.get(n["id"], "#555555"),
                                      "border": "#ffd34b"}},
-                font={"size": 15, "color": "#fafafa", "face": "monospace"},
+                font={"size": 16, "color": "#fafafa", "face": "monospace"},
                 title=_tt_short(n, deg.get(n["id"], 0)))
-            detail[n["id"]] = _tt_node(n, deg.get(n["id"], 0))
+            detail[n["id"]] = _tt_node(n, deg.get(n["id"], 0)) + _thumbs(n)
         if mode == "hub":
             for c in graph["clusters"]:
                 members = [m for m in c["members"] if deg.get(m, 0) > 0]
@@ -221,24 +226,22 @@ def render_graph(graph, mode: str = "hub"):
                             if best is None or e["score"] > best["score"]:
                                 best = e
                     if best is None:
-                        net.add_edge(c["cluster_id"], m, width=2, color="#33415c",
+                        net.add_edge(c["cluster_id"], m, width=2, color="#00ff9c",
                                      title=f"{m} — kampania {c['cluster_id']}")
                         continue
                     other = best["b"] if best["a"] == m else best["a"]
                     ev = "".join(f"<div style='margin-top:4px'>• {x}</div>"
                                  for x in best["evidence"][:4])
                     edge_full = _tt_card(
-                        f"<div style='font-size:13px;font-weight:bold;"
-                        f"color:{'#ff6b6b' if best['hard'] else '#5b7bd5'}'>"
+                        f"<div style='font-size:13px;font-weight:bold;color:#00ff9c'>"
                         f"{m} ↔ {other} · score {best['score']:.3f}"
                         f"{' · TWARDE' if best['hard'] else ''}</div>{ev}")
                     net.add_edge(
                         c["cluster_id"], m, value=round(best["score"] * 10, 1),
-                        width=1 + 4 * best["score"],
-                        color="#ff6b6b" if best["hard"] else "#5b7bd5",
+                        width=2 + 5 * best["score"],
+                        color="#00ff9c",
                         title=_tt_card(
-                            f"<div style='font-size:12px;font-weight:bold;"
-                            f"color:{'#ff6b6b' if best['hard'] else '#5b7bd5'}'>"
+                            f"<div style='font-size:12px;font-weight:bold;color:#00ff9c'>"
                             f"{m} ↔ {other} · score {best['score']:.3f}"
                             f"{' · TWARDE' if best['hard'] else ''}</div>"
                             f"<div style='margin-top:3px;color:#9aa7b4;font-size:11px'>"
@@ -251,24 +254,22 @@ def render_graph(graph, mode: str = "hub"):
                 ev = "".join(f"<div style='margin-top:4px'>• {x}</div>"
                              for x in e["evidence"][:4])
                 edge_full = _tt_card(
-                    f"<div style='font-size:13px;font-weight:bold;"
-                    f"color:{'#ff6b6b' if e['hard'] else '#5b7bd5'}'>"
+                    f"<div style='font-size:13px;font-weight:bold;color:#00ff9c'>"
                     f"{e['a']} ↔ {e['b']} · score {e['score']:.3f}"
                     f"{' · TWARDE' if e['hard'] else ''}</div>{ev}")
                 net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
                              title=_tt_card(
-                                 f"<div style='font-size:12px;font-weight:bold;"
-                                 f"color:{'#ff6b6b' if e['hard'] else '#5b7bd5'}'>"
+                                 f"<div style='font-size:12px;font-weight:bold;color:#00ff9c'>"
                                  f"{e['a']} ↔ {e['b']} · score {e['score']:.3f}"
                                  f"{' · TWARDE' if e['hard'] else ''}</div>"
                                  f"<div style='margin-top:3px;color:#9aa7b4;font-size:11px'>"
                                  f"kliknij — przesłanki</div>", 230),
-                             color="#ff6b6b" if e["hard"] else "#5b7bd5",
-                             width=1 + 4 * e["score"])
+                             color="#00ff9c",
+                             width=2 + 5 * e["score"])
                 edetail[f"{e['a']}|{e['b']}"] = edge_full
         net.set_options(
-            """{"physics": {"barnesHut": {"gravitationalConstant": -3000,
-                                           "springLength": 140,
+            """{"physics": {"barnesHut": {"gravitationalConstant": -8000,
+                                           "springLength": 100,
                                            "damping": 0.09}},
                 "nodes": {"shadow": {"enabled": true, "size": 6,
                                      "color": "rgba(255,255,255,0.25)"}}}""")

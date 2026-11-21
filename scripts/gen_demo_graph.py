@@ -73,12 +73,12 @@ for e in graph["edges"]:
     net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
                  title=(f"{e['a']} ↔ {e['b']} — score={e['score']:.3f}"
                         f"{' [TWARDE]' if e['hard'] else ''}<br>{ev}"),
-                 color="#ff6b6b" if e["hard"] else "#5b7bd5",
-                 width=1 + 4 * e["score"])
+                 color="#00ff9c",
+                 width=2 + 5 * e["score"])
 
 net.set_options(
-    json.dumps({"physics": {"barnesHut": {"gravitationalConstant": -3000,
-                                           "springLength": 140,
+    json.dumps({"physics": {"barnesHut": {"gravitationalConstant": -8000,
+                                           "springLength": 100,
                                            "damping": 0.09}},
                 "nodes": {"shadow": {"enabled": True, "size": 6,
                                      "color": "rgba(255,255,255,0.25)"}}}))

@@ -320,6 +320,32 @@ def domain_patterns(registrable_domains):
     return out
 
 
+def top_images(feats: dict, max_n: int = 3) -> list:
+    """Najlepsze obrazy incydentu do podglądu (zrzuty > obrazy główne > największe).
+    Zwraca listę ścieżek absolutnych."""
+    base = Path(feats["path"])
+    scored = []
+    for im in feats.get("images", []):
+        p = base / im["path"]
+        if not p.is_file():
+            continue
+        name = p.name.lower()
+        score = 0
+        if "zrzut" in name or "screen" in name:
+            score += 100
+        if im.get("top"):
+            score += 50
+        if name.startswith(("img_00", "01-hero", "hero", "og-")):
+            score += 40
+        try:
+            score += min(p.stat().st_size // 100_000, 20)
+        except OSError:
+            pass
+        scored.append((score, p))
+    scored.sort(key=lambda x: -x[0])
+    return [str(p) for _, p in scored[:max_n]]
+
+
 def extract_incident(inc: dict) -> dict:
     """Łączy cechy wszystkich plików incydentu w jeden wektor cech."""
     feats = {
