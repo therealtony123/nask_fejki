@@ -128,7 +128,7 @@ def _tt_short(n: dict, deg_n: int) -> str:
         f"powiązań: {deg_n} · kliknij — pełne szczegóły</div>", 240)
 
 
-def _card_image(text: str, width: int = 460) -> str:
+def _card_image(text: str, width: int = 560) -> str:
     """Renderuje kartę tekstową do PNG (data-URI) — popup jako węzeł-obraz w grafie."""
     import base64
     import io
@@ -142,7 +142,7 @@ def _card_image(text: str, width: int = 460) -> str:
                "/usr/share/fonts/dejavu/DejaVuSans.ttf"):
         if Path(fp).is_file():
             try:
-                font = ImageFont.truetype(fp, 15)
+                font = ImageFont.truetype(fp, 17)
                 break
             except Exception:
                 continue
@@ -151,7 +151,7 @@ def _card_image(text: str, width: int = 460) -> str:
             font = ImageFont.load_default()
         except Exception:
             return ""
-    pad, lh = 14, 22
+    pad, lh = 16, 26
     maxw = width - 2 * pad
     lines = []
     for raw in text.split("\n"):
@@ -331,29 +331,42 @@ def render_graph(graph, mode: str = "hub"):
         eimg = {k: _card_image(t + _foot) for k, t in etxt.items()}
         js = """<script>
 (function () {
-  var D = %s, E = %s, POP = "__kf_popup__", last = null;
-  function showPopup(img, cx, cy) {
-    network.body.data.nodes.update({
-      id: POP,
+  var D = %s, E = %s, POPN = 0, open = {};
+  function showPopup(img, cx, cy, key) {
+    if (open[key]) {
+      network.body.data.nodes.remove(open[key]);
+      delete open[key];
+      return;
+    }
+    var id = "__kf_popup_" + (POPN++);
+    network.body.data.nodes.add({
+      id: id,
       x: cx, y: cy,
-      fixed: { x: true, y: true },
       shape: "image",
       image: img,
-      size: 150,
-      mass: 8,
+      size: 175,
+      physics: false,
       borderWidth: 0,
       color: { background: "rgba(0,0,0,0)", border: "rgba(0,0,0,0)" }
     });
+    open[key] = id;
   }
-  function closePopup() {
-    if (network.body.data.nodes.get(POP)) network.body.data.nodes.remove(POP);
-    last = null;
+  function closeAll() {
+    Object.keys(open).forEach(function (k) {
+      if (network.body.data.nodes.get(open[k])) network.body.data.nodes.remove(open[k]);
+    });
+    open = {};
   }
   network.on("click", function (p) {
-    if (p.nodes.length && p.nodes[0] === POP) { closePopup(); return; }
     if (p.nodes.length) {
-      var pos = network.getPosition(p.nodes[0]);
-      if (D[p.nodes[0]]) { showPopup(D[p.nodes[0]], pos.x + 300, pos.y - 60); last = p.nodes[0]; }
+      var nid = p.nodes[0];
+      if (nid.indexOf("__kf_popup_") === 0) {
+        network.body.data.nodes.remove(nid);
+        Object.keys(open).forEach(function (k) { if (open[k] === nid) delete open[k]; });
+        return;
+      }
+      var pos = network.getPosition(nid);
+      if (D[nid]) showPopup(D[nid], pos.x + 340, pos.y - 90, "n:" + nid);
       return;
     }
     if (p.edges.length) {
@@ -363,13 +376,12 @@ def render_graph(graph, mode: str = "hub"):
         var t = E[k1] || E[k2];
         if (t) {
           var a = network.getPosition(ed.from), b = network.getPosition(ed.to);
-          showPopup(t, (a.x + b.x) / 2 + 300, (a.y + b.y) / 2 - 40);
-          last = "e" + k1;
+          showPopup(t, (a.x + b.x) / 2 + 340, (a.y + b.y) / 2 - 60, "e:" + k1);
         }
       }
       return;
     }
-    closePopup();
+    closeAll();
   });
 })();
 </script>""" % (_json.dumps(dimg, ensure_ascii=False),
@@ -380,8 +392,9 @@ def render_graph(graph, mode: str = "hub"):
         st.components.v1.html(html, height=640, scrolling=True)
         if mode == "hub":
             st.caption("Kwadraty = kampanie (hub), kółka = materiały. Najedź — skrót; "
-                       "**kliknij węzeł lub szprychę** — popup pojawia się jako obiekt "
-                       "w świecie grafu (rusza się razem z nim; kliknij go, aby zamknąć).")
+                       "**kliknij węzeł/szprychę** — karta w świecie grafu (można otworzyć "
+                       "kilka naraz, przeciągać je i zamykać kliknięciem; klik w puste "
+                       "zamyka wszystkie).")
         if hidden:
             st.caption(f"Ukryto {hidden} pojedynczych materiałów bez powiązań "
                        "(pełna lista na stronie Incydenty).")
