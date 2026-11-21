@@ -342,10 +342,11 @@ def render_graph(graph, mode: str = "hub"):
     network.body.data.nodes.add({
       id: id,
       x: cx, y: cy,
+      fixed: { x: true, y: true },
       shape: "image",
       image: img,
       size: 175,
-      physics: false,
+      mass: 6,
       borderWidth: 0,
       color: { background: "rgba(0,0,0,0)", border: "rgba(0,0,0,0)" }
     });
