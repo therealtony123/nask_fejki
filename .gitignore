@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.sqlite
+*.graph.json
+eda_report.txt
+tessdata/
+data/
+.DS_Store
