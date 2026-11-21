@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./kfk.sqlite:/app/kfk.sqlite
+    environment:
+      - TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
+    restart: unless-stopped

@@ -1,0 +1,10 @@
+numpy>=1.26
+pillow>=10.2
+scipy>=1.11
+networkx>=3.2
+streamlit>=1.36
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=5.1
+pytesseract>=0.3.10
+pyvis>=0.3.2
