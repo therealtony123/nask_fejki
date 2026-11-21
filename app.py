@@ -507,17 +507,73 @@ with tabs[0]:
 
 with tabs[1]:
     st.subheader("Graf zależności (krawędzie = wykryte powiązania)")
-    edges = []
-    for l in links:
-        color = "red" if l.strong_signals else "steelblue"
-        label = f"{l.score:.2f}"
-        edges.append(f'  "{l.a}" -> "{l.b}" [label="{label}", color="{color}", '
-                     f'fontcolor="{color}"];')
-    dot = ("digraph kampanie {\n  rankdir=LR;\n  node [shape=box, style=rounded, "
-           "fontsize=11];\n  edge [fontsize=9];\n" + "\n".join(edges) + "\n}\n")
-    st.graphviz_chart(dot)
-    st.caption("Czerwone krawędzie = twarde sygnały (ta sama domena rejestrowa, "
-               "near-duplikat obrazu, duplikat tekstu). Granatowe = podobieństwo ważone.")
+
+    def render_interactive_graph():
+        """Animowany graf pyvis (ruchome węzły, fizyka) w neonowej zieleni;
+        fallback: statyczny graphviz, gdy pyvis niedostępne."""
+        try:
+            from pyvis.network import Network
+            net = Network(height="620px", width="100%", bgcolor="#0b101a",
+                          font_color="#c9ffe0", directed=False, cdn_resources="in_line")
+            palette = ["#00ff9c", "#61ffb0", "#00e582", "#39d98a", "#0fd9a3",
+                       "#00c77c", "#0aa868", "#7dfff2", "#0a8f66", "#1fd9c9"]
+            cmap = {}
+            for i, c in enumerate(sorted(clusters, key=lambda x: -len(x.members))):
+                for m in c.members:
+                    cmap[m] = palette[i % len(palette)]
+            for m, f in zip(st.session_state.materials, st.session_state.features):
+                tip = (f"<b>{f.id}</b><br>źródło: {m.source}"
+                       + (f"<br>domena: {f.registrable_domain}" if f.registrable_domain else "")
+                       + (f"<br>słowa: {', '.join(sorted(f.keywords)[:6])}" if f.keywords else ""))
+                net.add_node(f.id, label=f.id,
+                             color=cmap.get(f.id, "#2e5c47"),
+                             title=tip, shape="dot", borderWidth=1,
+                             font={"color": "#c9ffe0", "size": 12})
+            for l in links:
+                strong = bool(l.strong_signals)
+                edge_col = ({"color": "#00ff9c", "highlight": "#7dfff2"} if strong
+                            else {"color": "#0aa868", "highlight": "#00ff9c"})
+                tip = (f"score=<b>{l.score}</b> (ufność {l.confidence})"
+                       + (f"<br>⚡ <b>{' | '.join(l.strong_signals)}</b>" if strong else "")
+                       + "".join(f"<br>• [{e.kind}] {e.description}: {e.score}"
+                                 for e in sorted(l.reasons, key=lambda x: -x.score)[:4]))
+                net.add_edge(l.a, l.b, value=round(l.score * 10, 1), title=tip,
+                             color=edge_col, width=2 if strong else 1,
+                             dashes=False if strong else True)
+            options = json.dumps({
+                "physics": {"barnesHut": {"gravitationalConstant": -4000,
+                                          "springLength": 120}},
+                "nodes": {"shadow": {"enabled": True, "size": 8,
+                                     "color": "rgba(0,255,156,0.35)"}}})
+            json.loads(options)
+            net.set_options(options)
+            out = "/tmp/kolekcjoner_graf.html"
+            net.write_html(out)
+            st.components.v1.html(Path(out).read_text(encoding="utf-8"),
+                                  height=660, scrolling=True)
+            return True
+        except Exception as e:  # pyvis niedostępne itp.
+            st.caption(f"Graf interaktywny niedostępny ({type(e).__name__}) — "
+                       "pokazuję wersję statyczną.")
+            return False
+
+    if not render_interactive_graph():
+        edges = []
+        for l in links:
+            color = "#00ff9c" if l.strong_signals else "#0aa868"
+            edge = f'{l.score:.2f}'
+            edges.append(f'  "{l.a}" -> "{l.b}" [label="{edge}", color="{color}", '
+                         f'fontcolor="{color}"];')
+        dot = ("digraph kampanie {\n  rankdir=LR;\n  bgcolor=\"#0b101a\";\n"
+               "  node [shape=box, style=\"rounded,filled\", fillcolor=\"#0d1420\", "
+               "color=\"#00ff9c\", fontcolor=\"#c9ffe0\", fontsize=11];\n"
+               "  edge [fontsize=9];\n" + "\n".join(edges) + "\n}\n")
+        st.graphviz_chart(dot)
+    st.caption("Kulki = materiały (odcień neonu = kampania, ciemne = pojedyncze). "
+               "Jasnozielone krawędzie = twarde sygnały (ta sama domena rejestrowa, "
+               "near-duplikat obrazu, duplikat tekstu). Ciemnozielone przerywane = "
+               "podobieństwo ważone. Najedź na węzeł/krawędź po szczegóły; graf można "
+               "przesuwać i przybliżać.")
 
 # ------------------------------------------------------------- cechy
 

@@ -67,23 +67,32 @@ def run_pipeline(data, db, threshold, progress=True):
 def render_graph(graph):
     try:
         from pyvis.network import Network
-        net = Network(height="600px", width="100%", bgcolor="#0e1117",
-                      font_color="#fafafa", directed=False)
-        palette = ["#ff4b4b", "#4bb3ff", "#ffd34b", "#4bff8c", "#c44bff", "#ff9d4b",
-                   "#4bffd3", "#ff4bd3", "#8cff4b", "#4b8cff"]
+        net = Network(height="600px", width="100%", bgcolor="#0a0e14",
+                      font_color="#c9ffe0", directed=False)
+        # paleta: neonowa zieleń -> ciemniejszy neon (odcień per klaster)
+        palette = ["#00ff9c", "#61ffb0", "#00e582", "#39d98a", "#0fd9a3",
+                   "#00c77c", "#0aa868", "#7dfff2", "#0a8f66", "#1fd9c9"]
         colors = {}
         for i, c in enumerate(graph["clusters"]):
             for m in c["members"]:
                 colors[m] = palette[i % len(palette)]
         for n in graph["nodes"]:
             net.add_node(n["id"], label=f"{n['id']}: {n['title'][:35]}",
-                         color=colors.get(n["id"], "#666666"), title=n["title"])
+                         color=colors.get(n["id"], "#2e5c47"), title=n["title"],
+                         shape="dot", borderWidth=1,
+                         font={"color": "#c9ffe0", "size": 12})
         for e in graph["edges"]:
             ev = "<br>".join(e["evidence"][:4])
+            edge_col = {"color": "#00ff9c", "highlight": "#7dfff2"} if e["hard"] \
+                       else {"color": "#0aa868", "highlight": "#00ff9c"}
             net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
                          title=f"score={e['score']:.3f}{' [TWARDE]' if e['hard'] else ''}<br>{ev}",
-                         color="#ff6b6b" if e["hard"] else "#6b8cff")
-        net.set_options("""{"physics": {"barnesHut": {"gravitationalConstant": -4000}}}""")
+                         color=edge_col,
+                         width=2 if e["hard"] else 1,
+                         dashes=False if e["hard"] else True)
+        net.set_options("""{"physics": {"barnesHut": {"gravitationalConstant": -4000}},
+                             "nodes": {"shadow": {"enabled": true, "size": 8,
+                                                  "color": "rgba(0,255,156,0.35)"}}}""")
         net.write_html("/tmp/kfk_graph.html")
         st.components.v1.html(Path("/tmp/kfk_graph.html").read_text(encoding="utf-8"),
                               height=640, scrolling=True)
