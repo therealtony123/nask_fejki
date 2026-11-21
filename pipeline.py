@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from kfk import (Tfidf, Store, build_edges, cluster_graph, extract_incident,
                  scan)
+from kfk.stix import build_bundle, export_ioc, incident_timespan
 
 
 def run(data_root, db_path, threshold=0.25, verbose=True):
@@ -46,6 +47,12 @@ def run(data_root, db_path, threshold=0.25, verbose=True):
             for ev in e["evidence"][:3]:
                 print(f"          • {ev}")
     clusters = cluster_graph([f["id"] for f in feats], edges, threshold)
+    # oś czasu kampanii (mtime plików incydentu)
+    spans = {f["id"]: incident_timespan(f["path"]) for f in feats}
+    for c in clusters:
+        first = min((spans[m][0] for m in c["members"] if spans[m][0]), default=None)
+        last = max((spans[m][1] for m in c["members"] if spans[m][1]), default=None)
+        c["first_seen"], c["last_seen"] = first, last
     if verbose:
         print(f"[4/4] Kampanie: {len(clusters)}")
         for c in clusters:
@@ -57,6 +64,7 @@ def run(data_root, db_path, threshold=0.25, verbose=True):
     # eksport grafu dla UI
     graph = {
         "nodes": [{"id": f["id"], "title": f["text"]["title"][:80],
+                   "first_seen": spans[f["id"]][0], "last_seen": spans[f["id"]][1],
                    "cluster": next((c["cluster_id"] for c in clusters if f["id"] in c["members"]), None)}
                   for f in feats],
         "edges": [{"a": e["a"], "b": e["b"], "score": e["score"], "hard": e["hard"],
@@ -65,8 +73,15 @@ def run(data_root, db_path, threshold=0.25, verbose=True):
     }
     out = Path(db_path).with_suffix(".graph.json")
     out.write_text(json.dumps(graph, ensure_ascii=False, indent=1), encoding="utf-8")
+    stix_path = Path(db_path).with_suffix(".stix.json")
+    bundle = build_bundle(feats, clusters, edges)
+    stix_path.write_text(json.dumps(bundle, ensure_ascii=False, indent=1), encoding="utf-8")
+    ioc_path = Path(db_path).with_suffix(".ioc.csv")
+    n_ioc = export_ioc(feats, clusters, str(ioc_path))
     if verbose:
         print(f"\nGotowe w {time.time() - t0:.1f}s | baza: {db_path} | graf: {out}")
+        print(f"STIX 2.1: {stix_path} ({len(bundle['objects'])} obiektów) | "
+              f"IoC: {ioc_path} ({n_ioc} wpisów)")
     return {"incidents": len(feats), "edges": len(edges), "clusters": len(clusters),
             "db": str(db_path)}
 

@@ -84,6 +84,22 @@ wszystkimi zapisanymi incydentami, po czym:
   przypisywany do kampanii najsilniejszego sąsiada (głosowanie ważone),
 - w przeciwnym razie → zgłaszany jako **nowy wzorzec działania**.
 
+### 1.6 Eksport dla CSIRT: STIX 2.1 + watchlista IoC
+
+Po klastrowaniu pipeline generuje dwa artefakty wdrożeniowe:
+
+- **pakiet STIX 2.1** (`*.stix.json`): obiekty `campaign` (z opisem przesłanek
+  i pierwszą/ostatnią aktywnością), `incident` (z cechami: domeny, ID trackerów),
+  `indicator` (pattern `domain-name` dla domen) oraz relacje
+  `incident -attributed-to-> campaign`, `indicator -indicates-> campaign`
+  i `incident -related-to-> incident` — te ostatnie zawierają **listę przesłanek
+  w polu description i poziom ufności (0–100) = ważone podobieństwo**;
+- **watchlista IoC** (`*.ioc.csv`): domeny, ID trackerów (GA/GTM/Pixel), hashe
+  faviconów i wideo z przypisaniem do kampanii i incydentu źródłowego.
+
+Oba pliki są do pobrania w zakładce „Eksport (STIX/IoC)" demonstratora i mogą
+trafić wprost do MISP/OpenCTI.
+
 ---
 
 ## 2. Uruchomienie
@@ -158,5 +174,6 @@ kfk/
   similarity.py        # TF-IDF + ważone podobieństwo multi-widok + przesłanki
   cluster.py           # graf, Louvain, przypisywanie nowych materiałów
   store.py             # trwałość: SQLite (incydenty, krawędzie, kampanie)
+  stix.py              # eksport STIX 2.1 + watchlista IoC + oś czasu
 eda.py                 # eksploracyjna analiza zbioru
 ```

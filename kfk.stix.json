@@ -1,0 +1,1354 @@
+{
+ "type": "bundle",
+ "id": "bundle--cc3b456b-1004-4915-9b7d-91ef667833e5",
+ "spec_version": "2.1",
+ "objects": [
+  {
+   "type": "identity",
+   "id": "identity--kolekcjoner-fejkow",
+   "name": "KOLEKCJONER FEJKÓW",
+   "identity_class": "system",
+   "created": "2026-11-21T18:10:53.679898Z",
+   "modified": "2026-11-21T18:10:53.679912Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "campaign",
+   "id": "campaign--kfk-k01",
+   "name": "Kampania K01",
+   "description": "identyczny tytuł: ««Wiem, kto strzelał»: zamach na Rafała Brzoskę, założyciela InPostu — Gazeta.pl»; podobieństwo treści: cos=1.00",
+   "first_seen": "2026-10-09T06:24:12Z",
+   "last_seen": "2026-10-09T08:58:10Z",
+   "labels": [
+    "scam-campaign"
+   ],
+   "created": "2026-11-21T18:10:53.683277Z",
+   "modified": "2026-11-21T18:10:53.683280Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "campaign",
+   "id": "campaign--kfk-k02",
+   "name": "Kampania K02",
+   "description": "identyczny tytuł: «37 minut po emisji wyprowadzono go w kajdankach. Nagranie usunięto przed północą»; podobieństwo treści: cos=0.91",
+   "first_seen": "2026-10-20T11:54:22Z",
+   "last_seen": "2026-10-28T11:28:34Z",
+   "labels": [
+    "scam-campaign"
+   ],
+   "created": "2026-11-21T18:10:53.683288Z",
+   "modified": "2026-11-21T18:10:53.683291Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "campaign",
+   "id": "campaign--kfk-k03",
+   "name": "Kampania K03",
+   "description": "klaster bez twardych przesłanek",
+   "first_seen": "2026-10-09T08:57:08Z",
+   "last_seen": "2026-10-09T08:57:46Z",
+   "labels": [
+    "scam-campaign"
+   ],
+   "created": "2026-11-21T18:10:53.683296Z",
+   "modified": "2026-11-21T18:10:53.683298Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "campaign",
+   "id": "campaign--kfk-k04",
+   "name": "Kampania K04",
+   "description": "klaster bez twardych przesłanek",
+   "first_seen": "2026-10-09T10:32:33Z",
+   "last_seen": "2026-10-09T10:32:35Z",
+   "labels": [
+    "scam-campaign"
+   ],
+   "created": "2026-11-21T18:10:53.683302Z",
+   "modified": "2026-11-21T18:10:53.683304Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "campaign",
+   "id": "campaign--kfk-k05",
+   "name": "Kampania K05",
+   "description": "klaster bez twardych przesłanek",
+   "first_seen": "2026-08-13T19:24:20Z",
+   "last_seen": "2026-10-12T09:04:17Z",
+   "labels": [
+    "scam-campaign"
+   ],
+   "created": "2026-11-21T18:10:53.683308Z",
+   "modified": "2026-11-21T18:10:53.683310Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "campaign",
+   "id": "campaign--kfk-k06",
+   "name": "Kampania K06",
+   "description": "klaster bez twardych przesłanek",
+   "first_seen": "2026-08-12T06:38:34Z",
+   "last_seen": "2026-10-12T09:51:21Z",
+   "labels": [
+    "scam-campaign"
+   ],
+   "created": "2026-11-21T18:10:53.683314Z",
+   "modified": "2026-11-21T18:10:53.683316Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "campaign",
+   "id": "campaign--kfk-k07",
+   "name": "Kampania K07",
+   "description": "klaster bez twardych przesłanek",
+   "first_seen": "2026-10-19T11:31:15Z",
+   "last_seen": "2026-10-19T11:32:32Z",
+   "labels": [
+    "scam-campaign"
+   ],
+   "created": "2026-11-21T18:10:53.683320Z",
+   "modified": "2026-11-21T18:10:53.683322Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "campaign",
+   "id": "campaign--kfk-k08",
+   "name": "Kampania K08",
+   "description": "klaster bez twardych przesłanek",
+   "first_seen": "2026-10-27T14:28:23Z",
+   "last_seen": "2026-10-27T14:29:31Z",
+   "labels": [
+    "scam-campaign"
+   ],
+   "created": "2026-11-21T18:10:53.683325Z",
+   "modified": "2026-11-21T18:10:53.683328Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-1",
+   "name": "Incydent 1: «Wiem, kto strzelał»: zamach na Rafała Brzoskę, założyciela InPostu — Gazeta.pl",
+   "description": "«Wiem, kto strzelał»: zamach na Rafała Brzoskę, założyciela InPostu — Gazeta.pl",
+   "first_seen": "2026-10-09T06:24:12Z",
+   "last_seen": "2026-10-09T06:25:39Z",
+   "created": "2026-11-21T18:10:53.683332Z",
+   "modified": "2026-11-21T18:10:53.683334Z",
+   "x_kfk_domains": [
+    "civicdaybook.live",
+    "facebook.com",
+    "facebook.net"
+   ],
+   "x_kfk_tracker_ids": [
+    "FB_2012165449475163"
+   ],
+   "x_kfk_cluster": "K01",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--5fbbd210-9207-40b1-9088-6124ed9952b0",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-1",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683357Z",
+   "modified": "2026-11-21T18:10:53.683360Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-2",
+   "name": "Incydent 2: «Wiem, kto strzelał»: zamach na Rafała Brzoskę, założyciela InPostu — Gazeta.pl",
+   "description": "«Wiem, kto strzelał»: zamach na Rafała Brzoskę, założyciela InPostu — Gazeta.pl",
+   "first_seen": "2026-10-09T08:18:43Z",
+   "last_seen": "2026-10-09T08:58:10Z",
+   "created": "2026-11-21T18:10:53.683365Z",
+   "modified": "2026-11-21T18:10:53.683367Z",
+   "x_kfk_domains": [
+    "acrosscommunities.live",
+    "crimsonbase.pro",
+    "facebook.com",
+    "facebook.net",
+    "googleapis.com",
+    "gstatic.com",
+    "healthlinkq.pro"
+   ],
+   "x_kfk_tracker_ids": [
+    "FB_2012165449475163"
+   ],
+   "x_kfk_cluster": "K01",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--c48c47f1-0b80-4078-85e6-98122f59ff94",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-2",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683378Z",
+   "modified": "2026-11-21T18:10:53.683380Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-3",
+   "name": "Incydent 3: «Próbowali mnie zniszczyć od lat — ale się nie zamknęłam»: po ataku na jej samoc",
+   "description": "«Próbowali mnie zniszczyć od lat — ale się nie zamknęłam»: po ataku na jej samochód Monika Olejnik powiedziała jedno zdanie, które powtarza teraz cała Polska — TVN24",
+   "first_seen": "2026-10-09T08:57:08Z",
+   "last_seen": "2026-10-09T08:57:46Z",
+   "created": "2026-11-21T18:10:53.683384Z",
+   "modified": "2026-11-21T18:10:53.683386Z",
+   "x_kfk_domains": [
+    "facebook.com",
+    "healthlinkq.pro"
+   ],
+   "x_kfk_tracker_ids": [],
+   "x_kfk_cluster": "K03",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--13cb90fa-60a0-4b80-aa5c-3325a8c2c94d",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-3",
+   "target_ref": "campaign--kfk-k03",
+   "created": "2026-11-21T18:10:53.683393Z",
+   "modified": "2026-11-21T18:10:53.683395Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-5",
+   "name": "Incydent 5: ",
+   "description": "",
+   "first_seen": "2026-10-09T10:32:33Z",
+   "last_seen": "2026-10-09T10:32:35Z",
+   "created": "2026-11-21T18:10:53.683399Z",
+   "modified": "2026-11-21T18:10:53.683401Z",
+   "x_kfk_domains": [],
+   "x_kfk_tracker_ids": [],
+   "x_kfk_cluster": "K04",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--b7f51dca-606e-48ae-8651-36130d492dfa",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-5",
+   "target_ref": "campaign--kfk-k04",
+   "created": "2026-11-21T18:10:53.683407Z",
+   "modified": "2026-11-21T18:10:53.683409Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-10",
+   "name": "Incydent 10: App Store – Słodka Bonanza",
+   "description": "App Store – Słodka Bonanza",
+   "first_seen": "2026-08-13T19:24:20Z",
+   "last_seen": "2026-10-12T09:04:17Z",
+   "created": "2026-11-21T18:10:53.683412Z",
+   "modified": "2026-11-21T18:10:53.683414Z",
+   "x_kfk_domains": [
+    "facebook.com",
+    "facebook.net",
+    "google.com",
+    "googleapis.com",
+    "gstatic.com",
+    "shop-77vault.xyz",
+    "unpkg.com"
+   ],
+   "x_kfk_tracker_ids": [
+    "FB_1376242401352160",
+    "FB_1549107073347817",
+    "FB_2070071404384324"
+   ],
+   "x_kfk_cluster": "K05",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--cdc4818c-3241-4f3d-a98e-20882611e560",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-10",
+   "target_ref": "campaign--kfk-k05",
+   "created": "2026-11-21T18:10:53.683420Z",
+   "modified": "2026-11-21T18:10:53.683422Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-14",
+   "name": "Incydent 14: Metabo RX",
+   "description": "Metabo RX",
+   "first_seen": "2026-08-12T06:38:34Z",
+   "last_seen": "2026-10-12T09:51:21Z",
+   "created": "2026-11-21T18:10:53.683426Z",
+   "modified": "2026-11-21T18:10:53.683428Z",
+   "x_kfk_domains": [
+    "clickline.org",
+    "eu-vi-stream.org",
+    "ineptsolidoval.top",
+    "jquery.com",
+    "jsdelivr.net",
+    "puuuuuush-king.org"
+   ],
+   "x_kfk_tracker_ids": [],
+   "x_kfk_cluster": "K06",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--55244228-dd83-4e7e-b43c-d35f5c8615ba",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-14",
+   "target_ref": "campaign--kfk-k06",
+   "created": "2026-11-21T18:10:53.683433Z",
+   "modified": "2026-11-21T18:10:53.683435Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-36",
+   "name": "Incydent 36: Poland Invest Summit 2026 – Gdzie Kapitał Spotyka Przyszłość",
+   "description": "Poland Invest Summit 2026 – Gdzie Kapitał Spotyka Przyszłość",
+   "first_seen": "2026-10-19T11:31:15Z",
+   "last_seen": "2026-10-19T11:32:32Z",
+   "created": "2026-11-21T18:10:53.683438Z",
+   "modified": "2026-11-21T18:10:53.683440Z",
+   "x_kfk_domains": [
+    "cloudflare.com",
+    "googleapis.com",
+    "jsdelivr.net",
+    "meroporepufulo.life",
+    "netlify.app",
+    "unsplash.com"
+   ],
+   "x_kfk_tracker_ids": [],
+   "x_kfk_cluster": "K07",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--464d88ab-5dfc-4640-87e6-62aa42926335",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-36",
+   "target_ref": "campaign--kfk-k07",
+   "created": "2026-11-21T18:10:53.683445Z",
+   "modified": "2026-11-21T18:10:53.683447Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-47",
+   "name": "Incydent 47: Uromexil Forte",
+   "description": "Uromexil Forte",
+   "first_seen": "2026-10-27T14:28:23Z",
+   "last_seen": "2026-10-27T14:29:31Z",
+   "created": "2026-11-21T18:10:53.683450Z",
+   "modified": "2026-11-21T18:10:53.683452Z",
+   "x_kfk_domains": [
+    "b-cdn.net",
+    "cloudflare.com",
+    "jsdelivr.net",
+    "shryxla-mynx.icu"
+   ],
+   "x_kfk_tracker_ids": [],
+   "x_kfk_cluster": "K08",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--11f2dba4-1b44-421d-a68d-eb454b245556",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-47",
+   "target_ref": "campaign--kfk-k08",
+   "created": "2026-11-21T18:10:53.683457Z",
+   "modified": "2026-11-21T18:10:53.683459Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-48",
+   "name": "Incydent 48: 37 minut po emisji wyprowadzono go w kajdankach. Nagranie usunięto przed północą",
+   "description": "37 minut po emisji wyprowadzono go w kajdankach. Nagranie usunięto przed północą",
+   "first_seen": "2026-10-28T11:27:35Z",
+   "last_seen": "2026-10-28T11:28:34Z",
+   "created": "2026-11-21T18:10:53.683462Z",
+   "modified": "2026-11-21T18:10:53.683464Z",
+   "x_kfk_domains": [
+    "facebook.net",
+    "jsdelivr.net",
+    "novumfy.com",
+    "oceanicbay.info"
+   ],
+   "x_kfk_tracker_ids": [],
+   "x_kfk_cluster": "K02",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--4e3e6cc2-e198-48b7-9d81-f5e7ce2941a3",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-48",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683468Z",
+   "modified": "2026-11-21T18:10:53.683470Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "incident",
+   "id": "incident--kfk-61",
+   "name": "Incydent 61: 37 minut po emisji wyprowadzono go w kajdankach. Nagranie usunięto przed północą",
+   "description": "37 minut po emisji wyprowadzono go w kajdankach. Nagranie usunięto przed północą",
+   "first_seen": "2026-10-20T11:54:22Z",
+   "last_seen": "2026-10-20T12:06:38Z",
+   "created": "2026-11-21T18:10:53.683474Z",
+   "modified": "2026-11-21T18:10:53.683476Z",
+   "x_kfk_domains": [
+    "delivered",
+    "doubleclick.net",
+    "er-api.com",
+    "glowpixel.org",
+    "google.com",
+    "google.pl",
+    "googleapis.com",
+    "googletagmanager.com",
+    "gstatic.com",
+    "jsdelivr.net"
+   ],
+   "x_kfk_tracker_ids": [
+    "AW-18463917747"
+   ],
+   "x_kfk_cluster": "K02",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--563f4c28-00b9-4dc4-a640-df332b6297f3",
+   "relationship_type": "attributed-to",
+   "source_ref": "incident--kfk-61",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683480Z",
+   "modified": "2026-11-21T18:10:53.683483Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--21e20f2f-7709-4387-a378-4c0f3313c501",
+   "name": "domena acrosscommunities.live",
+   "pattern": "[domain-name:value = 'acrosscommunities.live']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683512Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683515Z",
+   "modified": "2026-11-21T18:10:53.683517Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--879699fd-9571-4336-b4df-21881310a792",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--21e20f2f-7709-4387-a378-4c0f3313c501",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683524Z",
+   "modified": "2026-11-21T18:10:53.683526Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--388e61c2-9536-4023-81db-5f47adc055b8",
+   "name": "domena b-cdn.net",
+   "pattern": "[domain-name:value = 'b-cdn.net']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683532Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683534Z",
+   "modified": "2026-11-21T18:10:53.683536Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--a7108592-2ea3-407b-ad7a-44034e8d5f12",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--388e61c2-9536-4023-81db-5f47adc055b8",
+   "target_ref": "campaign--kfk-k08",
+   "created": "2026-11-21T18:10:53.683542Z",
+   "modified": "2026-11-21T18:10:53.683544Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--cfe29673-c2fd-401c-b77b-9e67c01c3453",
+   "name": "domena civicdaybook.live",
+   "pattern": "[domain-name:value = 'civicdaybook.live']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683548Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683551Z",
+   "modified": "2026-11-21T18:10:53.683552Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--0796fdae-04d4-468f-822a-3a2830c6b0cd",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--cfe29673-c2fd-401c-b77b-9e67c01c3453",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683557Z",
+   "modified": "2026-11-21T18:10:53.683559Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--bbe169ff-2af8-4cc2-affa-2c14edd2ca47",
+   "name": "domena clickline.org",
+   "pattern": "[domain-name:value = 'clickline.org']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683563Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683565Z",
+   "modified": "2026-11-21T18:10:53.683567Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--edc5ff56-95cd-43d1-8c5e-e3ca1fe9e47b",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--bbe169ff-2af8-4cc2-affa-2c14edd2ca47",
+   "target_ref": "campaign--kfk-k06",
+   "created": "2026-11-21T18:10:53.683572Z",
+   "modified": "2026-11-21T18:10:53.683574Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--3f0a745c-b427-4afd-bc2f-7d925d50a467",
+   "name": "domena cloudflare.com",
+   "pattern": "[domain-name:value = 'cloudflare.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683579Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683581Z",
+   "modified": "2026-11-21T18:10:53.683582Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--76d7acaa-0f17-477b-9b38-cfef8edbb274",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--3f0a745c-b427-4afd-bc2f-7d925d50a467",
+   "target_ref": "campaign--kfk-k08",
+   "created": "2026-11-21T18:10:53.683587Z",
+   "modified": "2026-11-21T18:10:53.683589Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--20006d7c-763f-42d8-a7b4-e34d98336a26",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--3f0a745c-b427-4afd-bc2f-7d925d50a467",
+   "target_ref": "campaign--kfk-k07",
+   "created": "2026-11-21T18:10:53.683593Z",
+   "modified": "2026-11-21T18:10:53.683595Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--c36ead67-ba2e-4794-86d4-2b899360b503",
+   "name": "domena crimsonbase.pro",
+   "pattern": "[domain-name:value = 'crimsonbase.pro']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683599Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683602Z",
+   "modified": "2026-11-21T18:10:53.683603Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--37446a45-a0f7-466b-b333-99f7fbcd816a",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--c36ead67-ba2e-4794-86d4-2b899360b503",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683608Z",
+   "modified": "2026-11-21T18:10:53.683610Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--1e19dd51-fa78-4264-b10c-65d92127135e",
+   "name": "domena delivered",
+   "pattern": "[domain-name:value = 'delivered']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683614Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683616Z",
+   "modified": "2026-11-21T18:10:53.683618Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--39ab11b4-013a-40de-acf9-f38b7f37f84e",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--1e19dd51-fa78-4264-b10c-65d92127135e",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683622Z",
+   "modified": "2026-11-21T18:10:53.683624Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--87aebf1c-5c1a-4302-8a56-07275c372b69",
+   "name": "domena doubleclick.net",
+   "pattern": "[domain-name:value = 'doubleclick.net']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683628Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683630Z",
+   "modified": "2026-11-21T18:10:53.683632Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--341b8646-b457-4f6b-ba74-fa3bd725be54",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--87aebf1c-5c1a-4302-8a56-07275c372b69",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683636Z",
+   "modified": "2026-11-21T18:10:53.683638Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--d737acc2-003e-4f89-94a2-fa913ecfe036",
+   "name": "domena er-api.com",
+   "pattern": "[domain-name:value = 'er-api.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683643Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683645Z",
+   "modified": "2026-11-21T18:10:53.683646Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--1a498922-388d-48a6-9ecd-5d88b6f17ec3",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--d737acc2-003e-4f89-94a2-fa913ecfe036",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683651Z",
+   "modified": "2026-11-21T18:10:53.683653Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--498e74e0-d283-4d58-9b30-b79485fd3288",
+   "name": "domena eu-vi-stream.org",
+   "pattern": "[domain-name:value = 'eu-vi-stream.org']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683657Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683660Z",
+   "modified": "2026-11-21T18:10:53.683661Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--52bbea4f-5970-43a2-a756-2693c82fb783",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--498e74e0-d283-4d58-9b30-b79485fd3288",
+   "target_ref": "campaign--kfk-k06",
+   "created": "2026-11-21T18:10:53.683666Z",
+   "modified": "2026-11-21T18:10:53.683668Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--6f0c9500-f3b4-48d1-861c-68c53f0325d2",
+   "name": "domena facebook.com",
+   "pattern": "[domain-name:value = 'facebook.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683672Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683674Z",
+   "modified": "2026-11-21T18:10:53.683675Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--ad3e5757-cefe-49e0-bad2-8e0dbbc2be98",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--6f0c9500-f3b4-48d1-861c-68c53f0325d2",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683680Z",
+   "modified": "2026-11-21T18:10:53.683681Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--27843d3f-4e30-498f-b11c-4b611dd981fe",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--6f0c9500-f3b4-48d1-861c-68c53f0325d2",
+   "target_ref": "campaign--kfk-k03",
+   "created": "2026-11-21T18:10:53.683686Z",
+   "modified": "2026-11-21T18:10:53.683687Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--34d56f95-b734-407a-ab45-673cbcbbd4ff",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--6f0c9500-f3b4-48d1-861c-68c53f0325d2",
+   "target_ref": "campaign--kfk-k05",
+   "created": "2026-11-21T18:10:53.683692Z",
+   "modified": "2026-11-21T18:10:53.683694Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--23ab7419-eb9b-4f4e-9a03-235e9eb2277f",
+   "name": "domena facebook.net",
+   "pattern": "[domain-name:value = 'facebook.net']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683698Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683700Z",
+   "modified": "2026-11-21T18:10:53.683702Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--7c0597a0-0c36-4359-aa7e-d96a4a824671",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--23ab7419-eb9b-4f4e-9a03-235e9eb2277f",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683706Z",
+   "modified": "2026-11-21T18:10:53.683708Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--dd565e38-113a-4b61-8514-dcc7b8eb4f1e",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--23ab7419-eb9b-4f4e-9a03-235e9eb2277f",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683712Z",
+   "modified": "2026-11-21T18:10:53.683714Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--6049811a-5993-48c0-9eaf-c732e930a846",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--23ab7419-eb9b-4f4e-9a03-235e9eb2277f",
+   "target_ref": "campaign--kfk-k05",
+   "created": "2026-11-21T18:10:53.683718Z",
+   "modified": "2026-11-21T18:10:53.683720Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--325904df-2d6e-4479-b0a8-3fee31014db9",
+   "name": "domena glowpixel.org",
+   "pattern": "[domain-name:value = 'glowpixel.org']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683725Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683727Z",
+   "modified": "2026-11-21T18:10:53.683729Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--553928d2-e295-4c3a-bd09-203a5de016a2",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--325904df-2d6e-4479-b0a8-3fee31014db9",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683733Z",
+   "modified": "2026-11-21T18:10:53.683735Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--34f7a1f4-fa23-4339-8ebf-390e6f8de32f",
+   "name": "domena google.com",
+   "pattern": "[domain-name:value = 'google.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683739Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683741Z",
+   "modified": "2026-11-21T18:10:53.683743Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--9aa1737c-63b6-40d0-b242-2a1934e8bc38",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--34f7a1f4-fa23-4339-8ebf-390e6f8de32f",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683748Z",
+   "modified": "2026-11-21T18:10:53.683749Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--08268426-88af-411f-aa4a-ca33d3da339f",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--34f7a1f4-fa23-4339-8ebf-390e6f8de32f",
+   "target_ref": "campaign--kfk-k05",
+   "created": "2026-11-21T18:10:53.683754Z",
+   "modified": "2026-11-21T18:10:53.683755Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--36b5da6f-fcc0-4726-964b-0511bcca3e58",
+   "name": "domena google.pl",
+   "pattern": "[domain-name:value = 'google.pl']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683760Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683762Z",
+   "modified": "2026-11-21T18:10:53.683764Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--efdff9b2-b6fc-4eea-b9ea-3e2aeecbe283",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--36b5da6f-fcc0-4726-964b-0511bcca3e58",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683768Z",
+   "modified": "2026-11-21T18:10:53.683770Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--cf4a3bb8-66be-42f7-b532-e7385681197c",
+   "name": "domena googleapis.com",
+   "pattern": "[domain-name:value = 'googleapis.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683774Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683777Z",
+   "modified": "2026-11-21T18:10:53.683779Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--f7244f38-f5c0-4af3-8962-6f6827076573",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--cf4a3bb8-66be-42f7-b532-e7385681197c",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683783Z",
+   "modified": "2026-11-21T18:10:53.683785Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--8408599b-9cf3-4d55-8372-3850c8712c77",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--cf4a3bb8-66be-42f7-b532-e7385681197c",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683789Z",
+   "modified": "2026-11-21T18:10:53.683791Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--25c74715-1d2f-4e42-b96f-78c985ffd07c",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--cf4a3bb8-66be-42f7-b532-e7385681197c",
+   "target_ref": "campaign--kfk-k05",
+   "created": "2026-11-21T18:10:53.683795Z",
+   "modified": "2026-11-21T18:10:53.683797Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--49703cfd-3f27-495c-88cd-480db62039a3",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--cf4a3bb8-66be-42f7-b532-e7385681197c",
+   "target_ref": "campaign--kfk-k07",
+   "created": "2026-11-21T18:10:53.683801Z",
+   "modified": "2026-11-21T18:10:53.683803Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--478e2a54-c3ad-4314-a06d-3ff8a75deea1",
+   "name": "domena googletagmanager.com",
+   "pattern": "[domain-name:value = 'googletagmanager.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683807Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683809Z",
+   "modified": "2026-11-21T18:10:53.683811Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--4428aa96-5089-467f-9184-0c0e6bc3b073",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--478e2a54-c3ad-4314-a06d-3ff8a75deea1",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683815Z",
+   "modified": "2026-11-21T18:10:53.683818Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--c983daa3-a7d9-4b2e-af7c-7967d86a5018",
+   "name": "domena gstatic.com",
+   "pattern": "[domain-name:value = 'gstatic.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683822Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683825Z",
+   "modified": "2026-11-21T18:10:53.683826Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--3dc13810-c392-41a8-93bd-c35773c31c46",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--c983daa3-a7d9-4b2e-af7c-7967d86a5018",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683831Z",
+   "modified": "2026-11-21T18:10:53.683833Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--223500aa-7e63-449e-b269-018f1561e811",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--c983daa3-a7d9-4b2e-af7c-7967d86a5018",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683837Z",
+   "modified": "2026-11-21T18:10:53.683839Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--e9283912-91ee-4807-9906-1e39106cd0b3",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--c983daa3-a7d9-4b2e-af7c-7967d86a5018",
+   "target_ref": "campaign--kfk-k05",
+   "created": "2026-11-21T18:10:53.683843Z",
+   "modified": "2026-11-21T18:10:53.683845Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--852566bc-2a8e-4d9f-b18c-9b4f6d802a68",
+   "name": "domena healthlinkq.pro",
+   "pattern": "[domain-name:value = 'healthlinkq.pro']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683849Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683851Z",
+   "modified": "2026-11-21T18:10:53.683853Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--41ced240-6f9c-46a4-9be5-673ff27a2150",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--852566bc-2a8e-4d9f-b18c-9b4f6d802a68",
+   "target_ref": "campaign--kfk-k01",
+   "created": "2026-11-21T18:10:53.683858Z",
+   "modified": "2026-11-21T18:10:53.683860Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--8ea4b24a-4f1f-455f-9a5e-25d91275cf8f",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--852566bc-2a8e-4d9f-b18c-9b4f6d802a68",
+   "target_ref": "campaign--kfk-k03",
+   "created": "2026-11-21T18:10:53.683864Z",
+   "modified": "2026-11-21T18:10:53.683866Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--aa5c4df9-c768-4580-99cd-ef04930ad72d",
+   "name": "domena ineptsolidoval.top",
+   "pattern": "[domain-name:value = 'ineptsolidoval.top']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683870Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683872Z",
+   "modified": "2026-11-21T18:10:53.683874Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--9b9b6228-1732-4a46-b097-c6338740a8dc",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--aa5c4df9-c768-4580-99cd-ef04930ad72d",
+   "target_ref": "campaign--kfk-k06",
+   "created": "2026-11-21T18:10:53.683878Z",
+   "modified": "2026-11-21T18:10:53.683880Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--088933a4-b0d0-4fa0-8192-38d56fcb8ad1",
+   "name": "domena jquery.com",
+   "pattern": "[domain-name:value = 'jquery.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683884Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683886Z",
+   "modified": "2026-11-21T18:10:53.683888Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--af2ed4c8-8e17-4d45-8bac-df4cc75eaf2c",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--088933a4-b0d0-4fa0-8192-38d56fcb8ad1",
+   "target_ref": "campaign--kfk-k06",
+   "created": "2026-11-21T18:10:53.683892Z",
+   "modified": "2026-11-21T18:10:53.683894Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--eb4db027-8478-4bdc-a82e-ba431841b3af",
+   "name": "domena jsdelivr.net",
+   "pattern": "[domain-name:value = 'jsdelivr.net']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683898Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683900Z",
+   "modified": "2026-11-21T18:10:53.683902Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--34cdfcab-3660-4030-9dcf-e4845e40ad70",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--eb4db027-8478-4bdc-a82e-ba431841b3af",
+   "target_ref": "campaign--kfk-k06",
+   "created": "2026-11-21T18:10:53.683906Z",
+   "modified": "2026-11-21T18:10:53.683908Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--471451f4-320b-450c-8638-59d9b7db1dd9",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--eb4db027-8478-4bdc-a82e-ba431841b3af",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683912Z",
+   "modified": "2026-11-21T18:10:53.683914Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--b00b04a5-0038-4b69-87c4-d4e364a44c02",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--eb4db027-8478-4bdc-a82e-ba431841b3af",
+   "target_ref": "campaign--kfk-k08",
+   "created": "2026-11-21T18:10:53.683918Z",
+   "modified": "2026-11-21T18:10:53.683920Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--900dff84-f0a0-48e3-94f1-a5cff5718257",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--eb4db027-8478-4bdc-a82e-ba431841b3af",
+   "target_ref": "campaign--kfk-k07",
+   "created": "2026-11-21T18:10:53.683924Z",
+   "modified": "2026-11-21T18:10:53.683926Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--fe5aec81-b625-42a2-8641-45553b2e41be",
+   "name": "domena meroporepufulo.life",
+   "pattern": "[domain-name:value = 'meroporepufulo.life']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683930Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683932Z",
+   "modified": "2026-11-21T18:10:53.683934Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--844f84a8-69c9-482d-b38e-d9842c2011a1",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--fe5aec81-b625-42a2-8641-45553b2e41be",
+   "target_ref": "campaign--kfk-k07",
+   "created": "2026-11-21T18:10:53.683938Z",
+   "modified": "2026-11-21T18:10:53.683940Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--6334a1f1-e8bc-409a-ba63-5aeee01bcc43",
+   "name": "domena netlify.app",
+   "pattern": "[domain-name:value = 'netlify.app']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683944Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683947Z",
+   "modified": "2026-11-21T18:10:53.683948Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--fd523b3d-b581-49fc-a717-729bcd4091ca",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--6334a1f1-e8bc-409a-ba63-5aeee01bcc43",
+   "target_ref": "campaign--kfk-k07",
+   "created": "2026-11-21T18:10:53.683952Z",
+   "modified": "2026-11-21T18:10:53.683954Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--5a2d19cf-d27f-472c-b240-364398e13d0c",
+   "name": "domena novumfy.com",
+   "pattern": "[domain-name:value = 'novumfy.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683958Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683960Z",
+   "modified": "2026-11-21T18:10:53.683962Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--c7dfb9a2-7271-4095-9987-95c70c576c8c",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--5a2d19cf-d27f-472c-b240-364398e13d0c",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683966Z",
+   "modified": "2026-11-21T18:10:53.683968Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--76c6e574-a6bb-48c1-b2d9-9b7bfc9da1cb",
+   "name": "domena oceanicbay.info",
+   "pattern": "[domain-name:value = 'oceanicbay.info']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683973Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683975Z",
+   "modified": "2026-11-21T18:10:53.683976Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--3e7717da-53ed-447b-95b0-53db811a0d7b",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--76c6e574-a6bb-48c1-b2d9-9b7bfc9da1cb",
+   "target_ref": "campaign--kfk-k02",
+   "created": "2026-11-21T18:10:53.683980Z",
+   "modified": "2026-11-21T18:10:53.683982Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--ded5d055-d990-4f8d-949e-98e5631b0f52",
+   "name": "domena puuuuuush-king.org",
+   "pattern": "[domain-name:value = 'puuuuuush-king.org']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.683987Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.683989Z",
+   "modified": "2026-11-21T18:10:53.683990Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--0f496930-66fe-46ca-95bc-da3ab2a611ab",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--ded5d055-d990-4f8d-949e-98e5631b0f52",
+   "target_ref": "campaign--kfk-k06",
+   "created": "2026-11-21T18:10:53.683994Z",
+   "modified": "2026-11-21T18:10:53.683996Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--9563350c-fffa-402f-91c9-42bd7ef0ff09",
+   "name": "domena shop-77vault.xyz",
+   "pattern": "[domain-name:value = 'shop-77vault.xyz']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.684006Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.684008Z",
+   "modified": "2026-11-21T18:10:53.684010Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--650b0500-7253-4f7e-8f74-c08ed59f049c",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--9563350c-fffa-402f-91c9-42bd7ef0ff09",
+   "target_ref": "campaign--kfk-k05",
+   "created": "2026-11-21T18:10:53.684014Z",
+   "modified": "2026-11-21T18:10:53.684016Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--6dccb3a7-7010-4bef-8d3f-f2a74a1c6b6e",
+   "name": "domena shryxla-mynx.icu",
+   "pattern": "[domain-name:value = 'shryxla-mynx.icu']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.684021Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.684023Z",
+   "modified": "2026-11-21T18:10:53.684024Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--28d25b14-7416-43e3-a085-e11300ce3940",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--6dccb3a7-7010-4bef-8d3f-f2a74a1c6b6e",
+   "target_ref": "campaign--kfk-k08",
+   "created": "2026-11-21T18:10:53.684029Z",
+   "modified": "2026-11-21T18:10:53.684031Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--78f93b16-1391-4b5c-a7c8-7878d3451b6e",
+   "name": "domena unpkg.com",
+   "pattern": "[domain-name:value = 'unpkg.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.684035Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.684038Z",
+   "modified": "2026-11-21T18:10:53.684039Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--3cb78fb7-403a-4982-826d-22a396237ca5",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--78f93b16-1391-4b5c-a7c8-7878d3451b6e",
+   "target_ref": "campaign--kfk-k05",
+   "created": "2026-11-21T18:10:53.684044Z",
+   "modified": "2026-11-21T18:10:53.684046Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "indicator",
+   "id": "indicator--10c749d8-992b-4382-83f6-9e549e35a906",
+   "name": "domena unsplash.com",
+   "pattern": "[domain-name:value = 'unsplash.com']",
+   "pattern_type": "stix",
+   "valid_from": "2026-11-21T18:10:53.684050Z",
+   "labels": [
+    "malicious-activity"
+   ],
+   "created": "2026-11-21T18:10:53.684052Z",
+   "modified": "2026-11-21T18:10:53.684054Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--002c25a6-9ef9-46e6-b7e8-76aec0f1e72e",
+   "relationship_type": "indicates",
+   "source_ref": "indicator--10c749d8-992b-4382-83f6-9e549e35a906",
+   "target_ref": "campaign--kfk-k07",
+   "created": "2026-11-21T18:10:53.684058Z",
+   "modified": "2026-11-21T18:10:53.684060Z",
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--f89db77c-93bc-41c9-ac34-473b29358122",
+   "relationship_type": "related-to",
+   "source_ref": "incident--kfk-1",
+   "target_ref": "incident--kfk-2",
+   "created": "2026-11-21T18:10:53.684070Z",
+   "modified": "2026-11-21T18:10:53.684072Z",
+   "description": "identyczny tytuł: ««Wiem, kto strzelał»: zamach na Rafała Brzoskę, założyciela InPostu — Gazeta.pl»; podobieństwo treści: cos=1.00; 11 pasujących obrazów, np. 03-wywiad.webp ≈ 03-wywiad.webp (odl. 0); 11 pasujących obrazów, np. 04-wywiad-2.webp ≈ 04-wywiad-2.webp (odl. 0)",
+   "confidence": 88,
+   "spec_version": "2.1"
+  },
+  {
+   "type": "relationship",
+   "id": "relationship--7f347572-29ec-430f-9302-fd74024e196b",
+   "relationship_type": "related-to",
+   "source_ref": "incident--kfk-48",
+   "target_ref": "incident--kfk-61",
+   "created": "2026-11-21T18:10:53.684080Z",
+   "modified": "2026-11-21T18:10:53.684083Z",
+   "description": "identyczny tytuł: «37 minut po emisji wyprowadzono go w kajdankach. Nagranie usunięto przed północą»; podobieństwo treści: cos=0.91; 6 pasujących obrazów, np. news2.webp ≈ news2.webp (odl. 0); 6 pasujących obrazów, np. news5.webp ≈ news5.webp (odl. 0)",
+   "confidence": 47,
+   "spec_version": "2.1"
+  }
+ ]
+}

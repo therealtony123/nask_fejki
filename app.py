@@ -131,8 +131,9 @@ if "graph" in st.session_state:
     m3.metric("Kampanie", len(graph["clusters"]))
     m4.metric("Twarde powiązania", sum(1 for e in graph["edges"] if e["hard"]))
 
-    tab_prz, tab_kamp, tab_graf, tab_inc, tab_nowy = st.tabs(
-        ["Przegląd kampanii", "Kampanie", "Graf zależności", "Incydenty", "Nowy materiał"])
+    tab_prz, tab_kamp, tab_graf, tab_inc, tab_nowy, tab_eks = st.tabs(
+        ["Przegląd kampanii", "Kampanie", "Graf zależności", "Incydenty", "Nowy materiał",
+         "Eksport (STIX/IoC)"])
 
     with tab_prz:
         for c in graph["clusters"]:
@@ -142,6 +143,8 @@ if "graph" in st.session_state:
                 st.write(f"**Uzasadnienie:** {c['summary']}")
                 st.write(f"Krawędzi w kampanii: {c['n_edges']}, twarde: {c['hard_links']}, "
                          f"średnie podobieństwo: {c['mean_score']}")
+                if c.get("first_seen"):
+                    st.write(f"Pierwsza aktywność: {c['first_seen']} | ostatnia: {c.get('last_seen')}")
 
     with tab_kamp:
         sel = st.selectbox("Kampania", [c["cluster_id"] for c in graph["clusters"]])
@@ -216,6 +219,39 @@ if "graph" in st.session_state:
                                         st.write(f"• {ev}")
                 except Exception as e:
                     st.error(f"Nie udało się pobrać/zbadać materiału: {e}")
+
+    with tab_eks:
+        st.write("Artefakty zrozumiałe dla CSIRT/NASK: pakiet **STIX 2.1** (kampanie, "
+                 "incydenty, wskaźniki domen, relacje z przesłankami i poziomem ufności) "
+                 "oraz **watchlista IoC**.")
+        stix_f = Path(st.session_state["db"]).with_suffix(".stix.json")
+        ioc_f = Path(st.session_state["db"]).with_suffix(".ioc.csv")
+        c1, c2 = st.columns(2)
+        with c1:
+            if stix_f.is_file():
+                data = stix_f.read_text(encoding="utf-8")
+                st.download_button("⬇ Pobierz STIX 2.1 (.json)", data,
+                                   file_name="kolekcjoner-fejkow.stix.json",
+                                   mime="application/json")
+                bundle = json.loads(data)
+                from collections import Counter
+                counts = Counter(o["type"] for o in bundle["objects"])
+                st.write("Obiekty w pakiecie:", dict(counts))
+            else:
+                st.info("Uruchom analizę, aby wygenerować pakiet STIX.")
+        with c2:
+            if ioc_f.is_file():
+                st.download_button("⬇ Pobierz watchlistę IoC (.csv)",
+                                   ioc_f.read_text(encoding="utf-8"),
+                                   file_name="ioc_watchlist.csv", mime="text/csv")
+                try:
+                    import pandas as pd
+                    df = pd.read_csv(ioc_f)
+                    st.dataframe(df, height=300)
+                except Exception:
+                    st.text(ioc_f.read_text(encoding="utf-8")[:2000])
+            else:
+                st.info("Uruchom analizę, aby wygenerować watchlistę IoC.")
 
 else:
     st.info("Ustaw katalog danych w panelu bocznym i kliknij **▶ Uruchom analizę** "
