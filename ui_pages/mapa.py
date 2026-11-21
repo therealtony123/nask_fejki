@@ -16,7 +16,8 @@ if not graph:
     st.info("Brak wyników — uruchom analizę na stronie Start (panel boczny).")
     st.stop()
 collapse = st.toggle("Zwiń kampanie do bąbelków (czytelny widok)",
-                     value=True,
+                     value=False,
                      help="Każda kampania = jeden bąbelek z liczbą materiałów; "
-                          "podwójne kliknięcie rozwija kampanię.")
+                          "podwójne kliknięcie rozwija kampanię. Wyłączone = pełny "
+                          "graf ze wszystkimi połączeniami.")
 render_graph(graph, collapse=collapse)

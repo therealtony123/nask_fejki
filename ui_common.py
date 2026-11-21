@@ -126,8 +126,18 @@ def render_graph(graph, collapse: bool = False):
         net.write_html("/tmp/kfk_graph.html")
         html = Path("/tmp/kfk_graph.html").read_text(encoding="utf-8")
         if collapse:
+            import json as _json
+            meta = {
+                c["cluster_id"]: (
+                    f"<b>{c['cluster_id']}</b> — {len(c['members'])} materiałów<br>"
+                    f"{c['label'][:140]}<br>"
+                    f"średnie podobieństwo: {c['mean_score']} · twarde: {c['hard_links']}<br>"
+                    f"członkowie: {', '.join(c['members'][:10])}")
+                for c in graph["clusters"] if len(c["members"]) > 1
+            }
             js = """<script>
 (function () {
+  var meta = %s;
   var groups = {};
   network.body.data.nodes.forEach(function (n) {
     if (n.group && n.group !== "pojedyncze") {
@@ -141,6 +151,7 @@ def render_graph(graph, collapse: bool = False):
         joinCondition: function (n) { return ids.indexOf(n.id) !== -1; },
         clusterNodeProperties: {
           label: g + " · " + ids.length + " materiałów",
+          title: meta[g] || (g + " — " + ids.length + " materiałów"),
           shape: "dot", size: 36, borderWidth: 2,
           color: {background: "#0c1220", border: "#00ff9c"},
           font: {size: 17, color: "#00ff9c", face: "monospace"}
@@ -149,7 +160,7 @@ def render_graph(graph, collapse: bool = False):
     }
   });
 })();
-</script>"""
+</script>""" % _json.dumps(meta, ensure_ascii=False)
             html = html.replace("</body>", js + "</body>")
         st.components.v1.html(html, height=640, scrolling=True)
         if collapse:
