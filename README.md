@@ -126,8 +126,8 @@ z braku informacji.
 Opcjonalna integracja z **Meta Ad Library API** (zakładka „Biblioteka reklam"):
 wyszukiwanie reklam wg słów kluczowych (np. „zarabiaj z domu") i porównywanie
 ich treści ze znanymi kampaniami. Wymaga tokena Graph API (instrukcja w
-`kfk/adlibrary.py`); bez tokena zakładka działa na zapisanej próbce
-`data/meta_ads_sample.json`.
+`kfk/adlibrary.py`); bez tokena zakładka działa na zapisanej syntetycznej próbce
+`samples/meta_ads_sample.json`.
 
 ---
 
@@ -172,7 +172,7 @@ Wymagania systemowe lokalnie: `tesseract-ocr` (dla OCR; opcjonalne).
 # z tokenem Graph API (uprawnienie ads_read):
 python fb_collector.py --token TOKEN --terms "zarabiaj z domu" --run-pipeline
 # tryb offline (próbka do demo, bez tokena):
-python fb_collector.py --from-file data/meta_ads_sample.json --run-pipeline
+python fb_collector.py --from-file samples/meta_ads_sample.json --run-pipeline
 ```
 
 Każda reklama trafia do zbioru jako incydent (`data/do_udostępnienia/ad_<ID>/`),
@@ -192,6 +192,19 @@ inwestycyjnych), zapisuje je jako incydenty (`harvest_<seq>/` z `page.html`,
 `meta.json` i obrazami), a następnie uruchamia pipeline i raportuje, które
 strony da się powiązać ze znanymi kampaniami, a które to nowe wzorce.
 Deduplikacja po domenie rejestrowalnej, pobieranie równoległe.
+
+### Przykładowe dane
+
+- `samples/meta_ads_sample.json` — **syntetyczna** próbka odpowiedzi Meta Ad
+  Library (3 fikcyjne reklamy: dwa warianty znanych kampanii + jeden nowy
+  wzorzec). Służy do demo zakładki „Biblioteka reklam" i trybu offline
+  `fb_collector.py --from-file` — bez tokena.
+- Zbiór organizatora (reklamy/scamy do analizy) NIE jest częścią repozytorium
+  (zakaz rozpowszechniania) — wrzuć go do `data/` (struktura
+  `data/do_udostępnienia/<id>/...`), a pipeline zbierze go sam.
+- `harvest_urls.py` pozyskuje świeże podejrzane strony z publicznych źródeł
+  (OpenPhish, AA419) i zapisuje je jako incydenty `harvest_*` w `data/` —
+  lokalnie, bez wrzucania zebranych stron do repo.
 
 ---
 

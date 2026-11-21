@@ -12,7 +12,7 @@ Przykłady:
   META_TOKEN=... python fb_collector.py --terms "inwestycja" --terms "suplement" --pages 3
 
   # tryb offline (demo bez tokena):
-  python fb_collector.py --from-file data/meta_ads_sample.json --run-pipeline
+  python fb_collector.py --from-file samples/meta_ads_sample.json --run-pipeline
 """
 import argparse
 import getpass

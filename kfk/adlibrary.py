@@ -1,7 +1,7 @@
 """Bonus: wyszukiwanie podejrzanych reklam w Meta Ad Library API.
 
 Wymaga tokena dostępu Graph API (opcjonalny). Bez tokena moduł potrafi wczytać
-zapisaną przykładową odpowiedź (data/meta_ads_sample.json) — demo działa offline.
+zapisaną przykładową odpowiedź (samples/meta_ads_sample.json) — demo działa offline.
 
 Uzyskanie tokena (bezpłatnie):
 1. Konto Meta + identyfikacja (Meta Business) — https://developers.facebook.com
@@ -41,12 +41,13 @@ def search_ads(token: str, terms: str, countries=None, limit=30, after=None) -> 
 
 def load_sample() -> dict:
     """Zapisana przykładowa odpowiedź API (demo offline, gdy brak tokena)."""
-    p = Path(__file__).parent.parent / "data" / "meta_ads_sample.json"
-    if p.is_file():
-        try:
-            return json.loads(p.read_text(encoding="utf-8"))
-        except Exception:
-            return None
+    for rel in ("samples/meta_ads_sample.json", "data/meta_ads_sample.json"):
+        p = Path(__file__).parent.parent / rel
+        if p.is_file():
+            try:
+                return json.loads(p.read_text(encoding="utf-8"))
+            except Exception:
+                continue
     return None
 
 

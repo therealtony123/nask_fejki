@@ -1,0 +1,70 @@
+{
+  "data": [
+    {
+      "id": "900000001",
+      "page_id": "111000000001",
+      "page_name": "Puls Wiadomości 24",
+      "ad_creation_time": "2026-11-15T08:00:00+0000",
+      "ad_delivery_start_time": "2026-11-16",
+      "ad_snapshot_url": "https://www.facebook.com/ads/library/?id=900000001",
+      "ad_creative_bodies": [
+        "Szokujące doniesienia: zamach na Rafała Brzoskę, założyciela InPostu. Wstrząsające szczegóły sprawy, o których nie powiedzieli w telewizji. Dziennikarze Gazety dotarli do nowych faktów."
+      ],
+      "ad_creative_link_titles": [
+        "«Wiem, kto strzelał»: zamach na Rafała Brzoskę, założyciela InPostu — Gazeta.pl"
+      ],
+      "ad_creative_link_descriptions": [
+        "Przeczytaj cały artykuł, zanim go usuną."
+      ],
+      "ad_creative_link_captions": [
+        "pulswiadomosci24"
+      ]
+    },
+    {
+      "id": "900000002",
+      "page_id": "111000000002",
+      "page_name": "Express Wieczorny",
+      "ad_creation_time": "2026-11-18T19:00:00+0000",
+      "ad_delivery_start_time": "2026-11-19",
+      "ad_snapshot_url": "https://www.facebook.com/ads/library/?id=900000002",
+      "ad_creative_bodies": [
+        "Skandal w telewizji. 37 minut po emisji wyprowadzono go w kajdankach. Nagranie usunięto przed północą. Zobacz, co naprawdę wydarzyło się na wizji."
+      ],
+      "ad_creative_link_titles": [
+        "37 minut po emisji wyprowadzono go w kajdankach. Nagranie usunięto przed północą"
+      ],
+      "ad_creative_link_descriptions": [
+        "Materiał znika z sieci — zobacz, zanim będzie za późno."
+      ],
+      "ad_creative_link_captions": [
+        "expreswieczorny"
+      ]
+    },
+    {
+      "id": "900000003",
+      "page_id": "111000000003",
+      "page_name": "Wealth System PL",
+      "ad_creation_time": "2026-11-20T10:00:00+0000",
+      "ad_delivery_start_time": "2026-11-20",
+      "ad_snapshot_url": "https://www.facebook.com/ads/library/?id=900000003",
+      "ad_creative_bodies": [
+        "Zarabiaj 5000 zł dziennie bez wychodzenia z domu. Platforma inwestycyjna gwarantuje zysk od pierwszego dnia. Zarejestruj się i odbierz bonus 500 zł na start."
+      ],
+      "ad_creative_link_titles": [
+        "Banki tego nie chcą: Polacy zarabiają 5000 zł dziennie"
+      ],
+      "ad_creative_link_descriptions": [
+        "Sprawdź, ile możesz zarobić w 30 dni."
+      ],
+      "ad_creative_link_captions": [
+        "wealthsystempl"
+      ]
+    }
+  ],
+  "paging": {
+    "cursors": {
+      "before": "MAZDZD",
+      "after": "MAZDZD"
+    }
+  }
+}

@@ -286,7 +286,7 @@ if "graph" in st.session_state:
         st.write("**Bonus:** automatyczne wyszukiwanie podejrzanych reklam w bibliotece "
                  "Meta Ad Library wg słów kluczowych i porównanie ich z wykrytymi kampaniami. "
                  "Wymaga tokena Graph API (opcjonalny — bez niego używamy zapisanej próbki, "
-                 "plik `data/meta_ads_sample.json`).")
+                 "plik `samples/meta_ads_sample.json`).")
         token = st.text_input("Token Meta Ad Library (Graph API)", type="password")
         terms = st.text_input("Słowa kluczowe", "zarabiaj z domu inwestycja")
         if st.button("🔎 Szukaj w bibliotece reklam"):
@@ -307,7 +307,7 @@ if "graph" in st.session_state:
                 if ads:
                     st.info("Użyto zapisanej przykładowej odpowiedzi API (demo offline).")
             if not ads:
-                st.warning("Brak danych. Podaj token lub umieść plik data/meta_ads_sample.json.")
+                st.warning("Brak danych. Podaj token lub umieść plik samples/meta_ads_sample.json.")
             else:
                 st.success(f"Pobrano {len(ads.get('data', []))} reklam — porównuję z kampaniami…")
                 rows = compare_ads(ads, stored, tfidf)
