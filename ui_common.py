@@ -30,6 +30,7 @@ def load_graph(db: str):
 
 def run_analysis(data, db, threshold):
     from kfk import build_edges, cluster_graph
+    from kfk.stix import incident_timespan
     incidents = scan(data)
     if not incidents:
         st.error("Brak incydentów w katalogu (oczekuję .../do_udostępnienia/<id>/).")
@@ -44,13 +45,18 @@ def run_analysis(data, db, threshold):
                for f in feats])
     edges = build_edges(feats, tfidf, threshold)
     clusters = cluster_graph([f["id"] for f in feats], edges, threshold)
+    spans = {f["id"]: incident_timespan(f["path"]) for f in feats}
+    for c in clusters:
+        first = min((spans[m][0] for m in c["members"] if spans[m][0]), default=None)
+        last = max((spans[m][1] for m in c["members"] if spans[m][1]), default=None)
+        c["first_seen"], c["last_seen"] = first, last
     store = get_store(db)
     store.save_incidents(feats)
     store.save_edges(edges)
     store.save_clusters(clusters)
     graph = {
         "nodes": [{"id": f["id"], "title": f["text"]["title"][:80],
-                   "first_seen": None, "last_seen": None,
+                   "first_seen": spans[f["id"]][0], "last_seen": spans[f["id"]][1],
                    "cluster": next((c["cluster_id"] for c in clusters
                                     if f["id"] in c["members"]), None)}
                   for f in feats],
@@ -64,7 +70,7 @@ def run_analysis(data, db, threshold):
     return graph
 
 
-def render_graph(graph):
+def render_graph(graph, collapse: bool = False):
     try:
         from pyvis.network import Network
         net = Network(height="600px", width="100%", bgcolor="#0e1117",
@@ -80,19 +86,31 @@ def render_graph(graph):
             deg[e["a"]] += 1
             deg[e["b"]] += 1
         max_deg = max(deg.values()) or 1
+        hidden = 0
         for n in graph["nodes"]:
+            if deg.get(n["id"], 0) == 0:
+                hidden += 1  # pojedyncze, niepołączone materiały — ukrywamy
+                continue
             size = 12 + 16 * (deg.get(n["id"], 0) / max_deg)
-            net.add_node(
-                n["id"], label=n["id"], shape="dot", size=size, borderWidth=1.5,
+            seen = (n.get("first_seen") or "—")[:10]
+            title = (
+                f"{n['id']} · kampania {n.get('cluster', '—')}<br>"
+                f"{n['title']}<br>"
+                f"powiązań: {deg.get(n['id'], 0)} · pierwsza aktywność: {seen}")
+            node_kwargs = dict(
+                label=n["id"], shape="dot", size=size, borderWidth=2,
                 color={"background": colors.get(n["id"], "#555555"),
                        "border": "#ffffff",
                        "highlight": {"background": colors.get(n["id"], "#555555"),
                                      "border": "#ffd34b"}},
-                font={"size": 14, "color": "#fafafa", "face": "monospace"},
-                title=(f"{n['id']}: {n['title']}<br>"
-                       f"kampania: {n.get('cluster', '—')}<br>"
-                       f"pierwsza aktywność: {n.get('first_seen', '—')}"))
+                font={"size": 15, "color": "#fafafa", "face": "monospace"},
+                title=title)
+            if collapse:
+                node_kwargs["group"] = n.get("cluster") or "pojedyncze"
+            net.add_node(n["id"], **node_kwargs)
         for e in graph["edges"]:
+            if deg.get(e["a"], 0) == 0 or deg.get(e["b"], 0) == 0:
+                continue
             ev = "<br>".join(e["evidence"][:4])
             net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
                          title=(f"{e['a']} ↔ {e['b']} — score={e['score']:.3f}"
@@ -106,8 +124,40 @@ def render_graph(graph):
                 "nodes": {"shadow": {"enabled": true, "size": 6,
                                      "color": "rgba(255,255,255,0.25)"}}}""")
         net.write_html("/tmp/kfk_graph.html")
-        st.components.v1.html(Path("/tmp/kfk_graph.html").read_text(encoding="utf-8"),
-                              height=640, scrolling=True)
+        html = Path("/tmp/kfk_graph.html").read_text(encoding="utf-8")
+        if collapse:
+            js = """<script>
+(function () {
+  var groups = {};
+  network.body.data.nodes.forEach(function (n) {
+    if (n.group && n.group !== "pojedyncze") {
+      (groups[n.group] = groups[n.group] || []).push(n.id);
+    }
+  });
+  Object.keys(groups).forEach(function (g) {
+    var ids = groups[g];
+    if (ids.length > 1) {
+      network.clustering.cluster({
+        joinCondition: function (n) { return ids.indexOf(n.id) !== -1; },
+        clusterNodeProperties: {
+          label: g + " · " + ids.length + " materiałów",
+          shape: "dot", size: 36, borderWidth: 2,
+          color: {background: "#0c1220", border: "#00ff9c"},
+          font: {size: 17, color: "#00ff9c", face: "monospace"}
+        }
+      });
+    }
+  });
+})();
+</script>"""
+            html = html.replace("</body>", js + "</body>")
+        st.components.v1.html(html, height=640, scrolling=True)
+        if collapse:
+            st.caption("Bąbelki = kampanie. Podwójne kliknięcie rozwija kampanię "
+                       "do pojedynczych materiałów.")
+        if hidden:
+            st.caption(f"Ukryto {hidden} pojedynczych materiałów bez powiązań "
+                       "(pełna lista na stronie Incydenty).")
         big = [c for c in graph["clusters"] if len(c["members"]) > 1]
         if big:
             cols = st.columns(min(3, len(big)))

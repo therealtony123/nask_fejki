@@ -38,18 +38,23 @@ for e in graph["edges"]:
 max_deg = max(deg.values()) or 1
 
 for n in graph["nodes"]:
+    if deg.get(n["id"], 0) == 0:
+        continue  # pojedyncze, niepołączone materiały — ukrywamy
     size = 12 + 16 * (deg.get(n["id"], 0) / max_deg)
+    seen = (n.get("first_seen") or "—")[:10]
     net.add_node(
-        n["id"], label=n["id"], shape="dot", size=size, borderWidth=1.5,
+        n["id"], label=n["id"], shape="dot", size=size, borderWidth=2,
         color={"background": colors.get(n["id"], "#555555"), "border": "#ffffff",
                "highlight": {"background": colors.get(n["id"], "#555555"),
                              "border": "#ffd34b"}},
-        font={"size": 14, "color": "#fafafa", "face": "monospace"},
-        title=(f"{n['id']}: {n['title']}<br>"
-               f"kampania: {n.get('cluster', '—')}<br>"
-               f"pierwsza aktywność: {n.get('first_seen', '—')}"))
+        font={"size": 15, "color": "#fafafa", "face": "monospace"},
+        title=(f"{n['id']} · kampania {n.get('cluster', '—')}<br>"
+               f"{n['title']}<br>"
+               f"powiązań: {deg.get(n['id'], 0)} · pierwsza aktywność: {seen}"))
 
 for e in graph["edges"]:
+    if deg.get(e["a"], 0) == 0 or deg.get(e["b"], 0) == 0:
+        continue
     ev = "<br>".join(e["evidence"][:4])
     net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
                  title=(f"{e['a']} ↔ {e['b']} — score={e['score']:.3f}"

@@ -15,4 +15,8 @@ graph = st.session_state.get("graph")
 if not graph:
     st.info("Brak wyników — uruchom analizę na stronie Start (panel boczny).")
     st.stop()
-render_graph(graph)
+collapse = st.toggle("Zwiń kampanie do bąbelków (czytelny widok)",
+                     value=True,
+                     help="Każda kampania = jeden bąbelek z liczbą materiałów; "
+                          "podwójne kliknięcie rozwija kampanię.")
+render_graph(graph, collapse=collapse)
