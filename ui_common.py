@@ -128,6 +128,60 @@ def _tt_short(n: dict, deg_n: int) -> str:
         f"powiązań: {deg_n} · kliknij — pełne szczegóły</div>", 240)
 
 
+def _card_image(text: str, width: int = 460) -> str:
+    """Renderuje kartę tekstową do PNG (data-URI) — popup jako węzeł-obraz w grafie."""
+    import base64
+    import io
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        return ""
+    font = None
+    for fp in ("/usr/share/fonts/TTF/DejaVuSans.ttf",
+               "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+               "/usr/share/fonts/dejavu/DejaVuSans.ttf"):
+        if Path(fp).is_file():
+            try:
+                font = ImageFont.truetype(fp, 15)
+                break
+            except Exception:
+                continue
+    if font is None:
+        try:
+            font = ImageFont.load_default()
+        except Exception:
+            return ""
+    pad, lh = 14, 22
+    maxw = width - 2 * pad
+    lines = []
+    for raw in text.split("\n"):
+        if not raw:
+            lines.append("")
+            continue
+        cur = ""
+        for ch in raw:
+            if font.getlength(cur + ch) <= maxw:
+                cur += ch
+            else:
+                lines.append(cur)
+                cur = ch
+        lines.append(cur)
+    if len(lines) > 30:
+        lines = lines[:29] + ["…"]
+    h = pad * 2 + lh * len(lines)
+    img = Image.new("RGB", (width, max(h, 40)), (0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rectangle([1, 1, width - 2, img.height - 2], outline=(0, 255, 156), width=2)
+    y = pad
+    for i, ln in enumerate(lines):
+        color = (0, 255, 156) if i == 0 else (205, 215, 224)
+        d.text((pad, y), ln, font=font, fill=color)
+        y += lh
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
 def render_graph(graph, mode: str = "hub"):
     """Graf kampanii.
 
@@ -263,32 +317,32 @@ def render_graph(graph, mode: str = "hub"):
                                                "updateInterval": 20}},
                 "nodes": {"shadow": {"enabled": true, "size": 6,
                                      "color": "rgba(255,255,255,0.25)"}}}""")
-        net.write_html("/tmp/kfk_graph.html")
-        # panel szczegółów po kliknięciu (zwijany) + czarna skórka
+        # karty popupów jako obrazy PNG (węzeł-obraz zawsze renderuje treść)
         import json as _json
-        import subprocess
+        import subprocess as _sp
         try:
-            _ver = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
-                                  capture_output=True, text=True, cwd=PROJ,
-                                  timeout=5).stdout.strip()
+            _ver = _sp.run(["git", "rev-parse", "--short", "HEAD"],
+                           capture_output=True, text=True, cwd=PROJ,
+                           timeout=5).stdout.strip()
         except Exception:
             _ver = "?"
+        _foot = f"\n\ngraf v{_ver} · kliknij ponownie, aby zamknąć"
+        dimg = {k: _card_image(t + _foot) for k, t in dtxt.items()}
+        eimg = {k: _card_image(t + _foot) for k, t in etxt.items()}
         js = """<script>
 (function () {
-  var D = %s, E = %s, V = "%s", POP = "__kf_popup__", last = null;
-  function showPopup(txt, cx, cy) {
+  var D = %s, E = %s, POP = "__kf_popup__", last = null;
+  function showPopup(img, cx, cy) {
     network.body.data.nodes.update({
       id: POP,
       x: cx, y: cy,
       fixed: { x: true, y: true },
-      shape: "box",
-      label: "graf v" + V + " · kliknij ponownie, aby zamknąć\\n\\n" + txt,
+      shape: "image",
+      image: img,
+      size: 150,
       mass: 8,
-      borderWidth: 2,
-      color: { background: "#000000", border: "#00ff9c" },
-      font: { size: 12, color: "#cdd7e0", face: "Consolas", multi: true },
-      widthConstraint: { maximum: 430 },
-      margin: 12
+      borderWidth: 0,
+      color: { background: "rgba(0,0,0,0)", border: "rgba(0,0,0,0)" }
     });
   }
   function closePopup() {
@@ -299,8 +353,7 @@ def render_graph(graph, mode: str = "hub"):
     if (p.nodes.length && p.nodes[0] === POP) { closePopup(); return; }
     if (p.nodes.length) {
       var pos = network.getPosition(p.nodes[0]);
-      showPopup(D[p.nodes[0]] || "", pos.x + 260, pos.y - 60);
-      last = p.nodes[0];
+      if (D[p.nodes[0]]) { showPopup(D[p.nodes[0]], pos.x + 300, pos.y - 60); last = p.nodes[0]; }
       return;
     }
     if (p.edges.length) {
@@ -310,7 +363,7 @@ def render_graph(graph, mode: str = "hub"):
         var t = E[k1] || E[k2];
         if (t) {
           var a = network.getPosition(ed.from), b = network.getPosition(ed.to);
-          showPopup(t, (a.x + b.x) / 2 + 260, (a.y + b.y) / 2 - 40);
+          showPopup(t, (a.x + b.x) / 2 + 300, (a.y + b.y) / 2 - 40);
           last = "e" + k1;
         }
       }
@@ -319,8 +372,9 @@ def render_graph(graph, mode: str = "hub"):
     closePopup();
   });
 })();
-</script>""" % (_json.dumps(dtxt, ensure_ascii=False),
-        _json.dumps(etxt, ensure_ascii=False), _ver)
+</script>""" % (_json.dumps(dimg, ensure_ascii=False),
+        _json.dumps(eimg, ensure_ascii=False))
+        net.write_html("/tmp/kfk_graph.html")
         html = Path("/tmp/kfk_graph.html").read_text(encoding="utf-8")
         html = html.replace("</body>", js + "</body>")
         st.components.v1.html(html, height=640, scrolling=True)
