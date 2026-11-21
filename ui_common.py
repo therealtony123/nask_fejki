@@ -162,14 +162,14 @@ def render_graph(graph, mode: str = "hub"):
             except ImportError:
                 return ""
             out = ""
-            for p in (n.get("img") or [])[:2]:
+            for p in (n.get("img") or [])[:1]:
                 try:
                     im = Image.open(p).convert("RGB")
-                    im.thumbnail((220, 440))
+                    im.thumbnail((150, 300))
                     buf = io.BytesIO()
-                    im.save(buf, format="JPEG", quality=62)
+                    im.save(buf, format="JPEG", quality=48)
                     uri = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
-                    out += (f"<img src='{uri}' style='max-width:200px;display:block;"
+                    out += (f"<img src='{uri}' style='max-width:150px;display:block;"
                             f"margin:8px 0 0;border-radius:4px;border:1px solid #1f1f1f'>")
                 except Exception:
                     continue
@@ -268,16 +268,21 @@ def render_graph(graph, mode: str = "hub"):
                              width=2 + 5 * e["score"])
                 edetail[f"{e['a']}|{e['b']}"] = edge_full
         net.set_options(
-            """{"physics": {"barnesHut": {"gravitationalConstant": -8000,
-                                           "springLength": 100,
-                                           "damping": 0.09}},
+            """{"physics": {"barnesHut": {"gravitationalConstant": -9000,
+                                           "springLength": 90,
+                                           "damping": 0.08,
+                                           "avoidOverlap": 0.6},
+                             "minVelocity": 0.75,
+                             "solver": "barnesHut",
+                             "stabilization": {"enabled": true, "iterations": 300,
+                                               "updateInterval": 20}},
                 "nodes": {"shadow": {"enabled": true, "size": 6,
                                      "color": "rgba(255,255,255,0.25)"}}}""")
         net.write_html("/tmp/kfk_graph.html")
         # panel szczegółów po kliknięciu (zwijany) + czarna skórka
         import json as _json
-        _panel_css = ("position:fixed;top:70px;right:16px;z-index:9999;"
-                      "max-width:400px;max-height:72vh;overflow:auto;"
+        _panel_css = ("position:absolute;z-index:9999;"
+                      "max-width:400px;max-height:70vh;overflow:auto;"
                       "background:#000000;border:1px solid #00ff9c;border-radius:8px;"
                       "padding:12px 14px;display:none;"
                       "font:12.5px/1.6 Consolas,monospace;color:#cdd7e0;"
@@ -286,19 +291,22 @@ def render_graph(graph, mode: str = "hub"):
 <script>
 (function () {
   var D = %s, E = %s, panel = document.getElementById("kf-panel"), last = null;
-  function show(html, key) {
+  function show(html, key, x, y) {
     if (last === key) { panel.style.display = "none"; last = null; return; }
     panel.innerHTML = html +
       "<div style='margin-top:10px;text-align:right;color:#00ff9c;cursor:pointer' " +
       "onclick='window.kfClose()'>✕ zamknij</div>";
+    panel.style.left = Math.min(x, window.innerWidth - 430) + "px";
+    panel.style.top = Math.max(8, Math.min(y, window.innerHeight - 320)) + "px";
     panel.style.display = "block"; last = key;
   }
   window.kfClose = function () { panel.style.display = "none"; last = null; };
   network.on("click", function (p) {
-    if (p.nodes.length) { show(D[p.nodes[0]] || "", "n:" + p.nodes[0]); }
+    var ev = p.event || {}, x = (ev.clientX || 200) + 18, y = (ev.clientY || 160) + 14;
+    if (p.nodes.length) { show(D[p.nodes[0]] || "", "n:" + p.nodes[0], x, y); }
     else if (p.edges.length && p.nodes.length === 2) {
       var k1 = p.nodes[0] + "|" + p.nodes[1], k2 = p.nodes[1] + "|" + p.nodes[0];
-      show(E[k1] || E[k2] || "", "e:" + k1);
+      show(E[k1] || E[k2] || "", "e:" + k1, x, y);
     } else { panel.style.display = "none"; last = null; }
   });
 })();
