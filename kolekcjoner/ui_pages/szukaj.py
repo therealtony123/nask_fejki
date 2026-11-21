@@ -55,9 +55,7 @@ else:
     q = st.text_input("Frazy wyszukiwania:", key=query_key + "2",
                       help="Np. „gwarantowany zysk kryptowaluty Elon Musk”.")
 
-limit = st.slider("Ile stron przeanalizować?", 2, 8, 4, key="szukaj_limit",
-                  help="Każdą znalezioną stronę pobieramy i porównujemy ze "
-                       "zbiora; więcej stron = dłuższe oczekiwanie.")
+limit = 12  # bierzemy wszystko, co zwróci wyszukiwarka (bez widżetu/limitu)
 
 if st.button("🛰️ Szukaj w internecie", type="primary"):
     if not q.strip():
