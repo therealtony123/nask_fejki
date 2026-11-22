@@ -76,9 +76,18 @@ def run_analysis(data, db, threshold):
     return graph
 
 
+def _rgba(hex_color: str, alpha: float) -> str:
+    """"#00ff9c" -> "rgba(0,255,156,0.5)" — do glow/shadow w pyvis."""
+    h = hex_color.lstrip("#")
+    if len(h) == 3:
+        h = "".join(x * 2 for x in h)
+    return f"rgba({int(h[0:2], 16)},{int(h[2:4], 16)},{int(h[4:6], 16)},{alpha})"
+
+
 def _tt_card(inner: str, min_w: int = 280) -> str:
-    return (f"<div style='min-width:{min_w}px;max-width:440px;background:#000000;"
-            f"border:1px solid #2b2b2b;border-radius:6px;padding:10px 12px;"
+    return (f"<div style='min-width:{min_w}px;max-width:440px;background:#060a10;"
+            f"border:1px solid rgba(0,255,156,0.45);border-radius:8px;padding:10px 12px;"
+            f"box-shadow:0 0 14px rgba(0,255,156,0.22);"
             f"font:12.5px/1.6 Consolas,monospace;color:#cdd7e0'>{inner}</div>")
 
 
@@ -169,17 +178,101 @@ def _card_image(text: str, width: int = 560) -> str:
     if len(lines) > 30:
         lines = lines[:29] + ["…"]
     h = pad * 2 + lh * len(lines)
-    img = Image.new("RGB", (width, max(h, 40)), (0, 0, 0))
+    img = Image.new("RGB", (width, max(h, 40)), (4, 8, 14))
     d = ImageDraw.Draw(img)
-    d.rectangle([1, 1, width - 2, img.height - 2], outline=(0, 255, 156), width=2)
+    d.rounded_rectangle([1, 1, width - 2, img.height - 2], radius=10,
+                        outline=(0, 255, 156), width=2)
+    d.rounded_rectangle([1, 1, 5, img.height - 2], radius=2, fill=(0, 229, 255))
     y = pad
     for i, ln in enumerate(lines):
-        color = (0, 255, 156) if i == 0 else (205, 215, 224)
+        if i == 0:
+            color = (0, 255, 156)
+        elif ln.startswith("graf v"):
+            color = (62, 107, 85)
+        else:
+            color = (205, 215, 224)
         d.text((pad, y), ln, font=font, fill=color)
         y += lh
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
+def _filter_graph(graph):
+    """Panel filtrów nad grafem. Zwraca (graf po filtrach, pokazuj_pojedyncze)."""
+    nodes = graph.get("nodes", [])
+    edges = list(graph.get("edges", []))
+    clusters = list(graph.get("clusters", []))
+    with st.container(border=True):
+        st.markdown('<div class="kf-fbar-title">// <b>FILTRY</b> MAPY POWIĄZAŃ</div>',
+                    unsafe_allow_html=True)
+        fc1, fc2, fc3, fc4 = st.columns([1.25, 1.75, 2.95, 1.15])
+        with fc1:
+            only_hard = st.toggle("tylko TWARDE", value=False,
+                                  help="Zostaw wyłącznie krawędzie z twardymi "
+                                       "przesłankami (identyczne domeny/wizerunki, "
+                                       "hashe…).")
+        with fc2:
+            min_pct = st.slider("min. podobieństwo", 0, 100, 0, 5,
+                                help="Zostaw na mapie tylko te powiązania, w których "
+                                     "materiały są do siebie podobne co najmniej "
+                                     "w takim stopniu (0% = wszystko, 100% = "
+                                     "praktycznie bliźniaki).")
+            min_score = min_pct / 100
+        with fc3:
+            query = st.text_input(
+                "szukaj", value="",
+                placeholder="🔍 fraza: id / tytuł / domena / wizerunek…",
+                label_visibility="collapsed",
+                help="Pokaż wyłącznie materiały pasujące do frazy (id, tytuł, domena, "
+                     "wizerunek, tracker).")
+        with fc4:
+            show_single = st.toggle("pojedyncze", value=False,
+                                    help="Pokaż też materiały bez powiązań.")
+        sel = None
+        cids = [c["cluster_id"] for c in clusters]
+        if cids:
+            sel = st.pills("kampanie", cids, selection_mode="multi",
+                           help="Bez wyboru = wszystkie kampanie.")
+        # --- filtracja ---
+        fedges = [e for e in edges
+                  if e["score"] >= min_score and (not only_hard or e.get("hard"))]
+        cluster_of = {n["id"]: n.get("cluster") for n in nodes}
+        if sel:
+            s = set(sel)
+            fedges = [e for e in fedges
+                      if cluster_of.get(e["a"]) in s and cluster_of.get(e["b"]) in s]
+        if query.strip():
+            q = query.strip().lower()
+
+            def _hit(n):
+                hay = " ".join(filter(None, [
+                    n.get("id") or "", n.get("title") or "",
+                    " ".join(n.get("domains") or []),
+                    " ".join(n.get("faces") or []),
+                    " ".join(n.get("trackers") or [])])).lower()
+                return q in hay
+            keep = {n["id"] for n in nodes if _hit(n)}
+            fedges = [e for e in fedges if e["a"] in keep and e["b"] in keep]
+            fnodes = [n for n in nodes if n["id"] in keep]
+            show_single = True  # pasujący pojedynczy materiał musi być widoczny
+        else:
+            fnodes = list(nodes)
+        if sel:
+            s = set(sel)
+            fnodes = [n for n in fnodes if cluster_of.get(n["id"]) in s]
+        ids = {n["id"] for n in fnodes}
+        fclusters = [c for c in clusters if any(m in ids for m in c["members"])]
+        active = bool(only_hard or min_score > 0 or query.strip() or sel)
+        st.markdown(
+            "<div class='kf-fstat'>PO FILTRACH: "
+            f"<b>{len(fedges)}</b>/{len(edges)} powiązań · "
+            f"<b>{len(fnodes)}</b>/{len(nodes)} materiałów · "
+            f"<b>{len(fclusters)}</b>/{len(clusters)} kampanii "
+            + ("<span class='off'>● FILTRY AKTYWNE</span>" if active
+               else "<span class='on'>● PEŁNY ZBIÓR</span>")
+            + "</div>", unsafe_allow_html=True)
+    return {"nodes": fnodes, "edges": fedges, "clusters": fclusters}, show_single
 
 
 def render_graph(graph, mode: str = "hub"):
@@ -189,12 +282,18 @@ def render_graph(graph, mode: str = "hub"):
     bez spaghetti, połączenia cały czas widoczne.
     mode='full': wszystkie krawędzie materiał–materiał.
     """
+    graph, show_single = _filter_graph(graph)
+    if not graph["nodes"] or (not graph["edges"] and not show_single):
+        st.info("Filtry wykluczyły wszystkie materiały — osłab kryteria "
+                "(fraza, próg, wybrane kampanie) albo odśwież wynik analizy.")
+        return
     try:
         from pyvis.network import Network
-        net = Network(height="680px", width="100%", bgcolor="#000000",
-                      font_color="#fafafa", directed=False, cdn_resources="in_line")
-        palette = ["#ff4b4b", "#4bb3ff", "#ffd34b", "#4bff8c", "#c44bff", "#ff9d4b",
-                   "#4bffd3", "#ff4bd3", "#8cff4b", "#4b8cff"]
+        net = Network(height="680px", width="100%", bgcolor="#04070c",
+                      font_color="#c9ffe9", directed=False, cdn_resources="in_line")
+        # paleta neonowa (dark-ops): każda kampania świeci własnym kolorem
+        palette = ["#00ff9c", "#00e5ff", "#ff2bd6", "#ffb400", "#a855f7",
+                   "#ff5f1f", "#00ffc8", "#ff2079", "#c8ff00", "#38bdf8"]
         colors = {}
         for i, c in enumerate(graph["clusters"]):
             for m in c["members"]:
@@ -203,7 +302,7 @@ def render_graph(graph, mode: str = "hub"):
         for e in graph["edges"]:
             deg[e["a"]] += 1
             deg[e["b"]] += 1
-        max_deg = max(deg.values()) or 1
+        max_deg = max(deg.values(), default=0) or 1
         dtxt = {}   # teksty szczegółów węzłów (popup = węzeł w świecie grafu)
         etxt = {}   # teksty szczegółów krawędzi
 
@@ -220,26 +319,32 @@ def render_graph(graph, mode: str = "hub"):
             return "\n".join(lines)
 
         hidden = 0
+        n_vis = 0
+        e_cnt = 0
         for n in graph["nodes"]:
-            if deg.get(n["id"], 0) == 0:
+            if deg.get(n["id"], 0) == 0 and not show_single:
                 hidden += 1  # pojedyncze, niepołączone materiały — ukrywamy
                 continue
             size = 12 + 16 * (deg.get(n["id"], 0) / max_deg)
+            col = colors.get(n["id"], "#00e5ff")
             net.add_node(
-                n["id"], label=n["id"], shape="dot", size=size, borderWidth=2,
-                color={"background": colors.get(n["id"], "#555555"),
-                       "border": "#ffffff",
-                       "highlight": {"background": colors.get(n["id"], "#555555"),
-                                     "border": "#ffd34b"}},
-                font={"size": 16, "color": "#fafafa", "face": "monospace"},
+                n["id"], label=n["id"], shape="dot", size=size, borderWidth=2.5,
+                color={"background": "#04070c",
+                       "border": col,
+                       "highlight": {"background": "#0a1420", "border": "#ffffff"},
+                       "hover": {"background": "#0a1420", "border": "#ffffff"}},
+                shadow={"enabled": True, "color": _rgba(col, 0.55),
+                        "size": 14, "x": 0, "y": 0},
+                font={"size": 15, "color": col, "face": "Consolas,monospace"},
                 title=_tt_short(n, deg.get(n["id"], 0)))
+            n_vis += 1
             dtxt[n["id"]] = _tt_node_text(n, deg.get(n["id"], 0))
         if mode == "hub":
             for c in graph["clusters"]:
                 members = [m for m in c["members"] if deg.get(m, 0) > 0]
                 if len(members) < 2:
                     continue
-                col = colors.get(members[0], "#4bb3ff")
+                col = colors.get(members[0], "#00e5ff")
                 hub_text = (
                     f"{c['cluster_id']} — KAMPANIA · {len(members)} materiałów\n"
                     f"{c['label'][:160]}\n"
@@ -252,12 +357,17 @@ def render_graph(graph, mode: str = "hub"):
                     f"<div style='margin-top:4px;color:#5b7bd5;font-size:11px'>"
                     f"kliknij — pełne szczegóły</div>", 260)
                 net.add_node(
-                    c["cluster_id"], label=c["cluster_id"], shape="box",
-                    size=22 + 6 * len(members), borderWidth=2, mass=2 + 2 * len(members),
-                    color={"background": "#000000", "border": col,
-                           "highlight": {"background": "#111111", "border": "#ffd34b"}},
-                    font={"size": 18, "color": col, "face": "monospace"},
+                    c["cluster_id"], label=c["cluster_id"], shape="diamond",
+                    size=24 + 6 * len(members), borderWidth=2.5,
+                    mass=2 + 2 * len(members),
+                    color={"background": "#04070c", "border": col,
+                           "highlight": {"background": "#0a1420", "border": "#ffffff"},
+                           "hover": {"background": "#0a1420", "border": "#ffffff"}},
+                    shadow={"enabled": True, "color": _rgba(col, 0.6),
+                            "size": 16, "x": 0, "y": 0},
+                    font={"size": 17, "color": col, "face": "Consolas,monospace"},
                     title=hub_short)
+                n_vis += 1
                 dtxt[c["cluster_id"]] = hub_text
                 for m in members:
                     best = None
@@ -266,9 +376,14 @@ def render_graph(graph, mode: str = "hub"):
                                 and e["b"] in c["members"]):
                             if best is None or e["score"] > best["score"]:
                                 best = e
+                    spoke = {"enabled": True, "type": "curvedCW", "roundness": 0.16}
                     if best is None:
-                        net.add_edge(c["cluster_id"], m, width=2, color="#00ff9c",
+                        net.add_edge(c["cluster_id"], m, width=1.5, color=col,
+                                     dashes=True, smooth=spoke,
+                                     shadow={"enabled": True, "color": _rgba(col, 0.35),
+                                             "size": 8, "x": 0, "y": 0},
                                      title=f"{m} — kampania {c['cluster_id']}")
+                        e_cnt += 1
                         continue
                     other = best["b"] if best["a"] == m else best["a"]
                     edge_text = (
@@ -277,14 +392,19 @@ def render_graph(graph, mode: str = "hub"):
                         + "\n".join(f"• {x}" for x in best["evidence"][:4]))
                     net.add_edge(
                         c["cluster_id"], m, value=round(best["score"] * 10, 1),
-                        width=2 + 5 * best["score"],
-                        color="#00ff9c",
+                        width=1.5 + 4.5 * best["score"],
+                        dashes=(not best["hard"]),
+                        color=col,
+                        shadow={"enabled": True, "color": _rgba(col, 0.5),
+                                "size": 10, "x": 0, "y": 0},
+                        smooth=spoke,
                         title=_tt_card(
-                            f"<div style='font-size:12px;font-weight:bold;color:#00ff9c'>"
+                            f"<div style='font-size:12px;font-weight:bold;color:{col}'>"
                             f"{m} ↔ {other} · score {best['score']:.3f}"
                             f"{' · TWARDE' if best['hard'] else ''}</div>"
                             f"<div style='margin-top:3px;color:#9aa7b4;font-size:11px'>"
                             f"kliknij — przesłanki</div>", 230))
+                    e_cnt += 1
                     etxt[f"{c['cluster_id']}|{m}"] = edge_text
         else:
             for e in graph["edges"]:
@@ -298,13 +418,19 @@ def render_graph(graph, mode: str = "hub"):
                     + "\n".join(f"• {x}" for x in e["evidence"][:4]))
                 net.add_edge(e["a"], e["b"], value=round(e["score"] * 10, 1),
                              title=_tt_card(
-                                 f"<div style='font-size:12px;font-weight:bold;color:#00ff9c'>"
-                                 f"{e['a']} ↔ {e['b']} · score {e['score']:.3f}"
+                                 f"<div style='font-size:12px;font-weight:bold;"
+                                 f"color:{'#00ff9c' if e['hard'] else '#00e5ff'}"
+                                 f"'>{e['a']} ↔ {e['b']} · score {e['score']:.3f}"
                                  f"{' · TWARDE' if e['hard'] else ''}</div>"
                                  f"<div style='margin-top:3px;color:#9aa7b4;font-size:11px'>"
                                  f"kliknij — przesłanki</div>", 230),
-                             color="#00ff9c",
-                             width=2 + 5 * e["score"])
+                             dashes=(not e["hard"]),
+                             color=("#00ff9c" if e["hard"] else "#00e5ff"),
+                             shadow={"enabled": True,
+                                     "color": _rgba("#00ff9c" if e["hard"] else "#00e5ff", 0.45),
+                                     "size": 10, "x": 0, "y": 0},
+                             width=1.5 + 4.5 * e["score"])
+                e_cnt += 1
                 etxt[f"{e['a']}|{e['b']}"] = edge_text
         net.set_options(
             """{"physics": {"barnesHut": {"gravitationalConstant": -9000,
@@ -315,8 +441,11 @@ def render_graph(graph, mode: str = "hub"):
                              "solver": "barnesHut",
                              "stabilization": {"enabled": true, "iterations": 300,
                                                "updateInterval": 20}},
-                "nodes": {"shadow": {"enabled": true, "size": 6,
-                                     "color": "rgba(255,255,255,0.25)"}}}""")
+                "interaction": {"hover": true, "tooltipDelay": 150,
+                                "keyboard": true, "zoomSpeed": 0.6},
+                "nodes": {"shadow": {"enabled": true},
+                          "font": {"face": "Consolas, monospace"}},
+                "edges": {"selectionWidth": 2}}""")
         # karty popupów jako obrazy PNG (węzeł-obraz zawsze renderuje treść)
         import json as _json
         import subprocess as _sp
@@ -404,13 +533,53 @@ def render_graph(graph, mode: str = "hub"):
         _json.dumps(eimg, ensure_ascii=False))
         net.write_html("/tmp/kfk_graph.html")
         html = Path("/tmp/kfk_graph.html").read_text(encoding="utf-8")
-        html = html.replace("</body>", js + "</body>")
+        # skin dark-ops: siatka + mgiełka neonowa w tle, skanliny CRT, HUD w rogach
+        hud = (
+            "<div class='kf-vig'></div>"
+            "<div class='kf-hud'>&#9673; KFK // MAPA POWIĄZAŃ <b>&#9646;</b><br>"
+            f"<span class='dim'>SCAN:CAMPAIGN_GRAPH &middot; TRYB:"
+            f"{'HUB' if mode == 'hub' else 'FULL'}</span></div>"
+            f"<div class='kf-hud2'>WĘZŁY:{n_vis} &middot; KRAWĘDZIE:{e_cnt}</div>")
+        css = """<style>
+body { background: #04070c !important; }
+.card { background: transparent !important; border: none !important;
+        box-shadow: none !important; }
+#mynetwork {
+  background-color: #04070c !important;
+  border: 1px solid rgba(0,255,156,0.25) !important;
+  background-image:
+    radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0,255,156,0.055), transparent 70%),
+    linear-gradient(rgba(0,255,156,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,156,0.045) 1px, transparent 1px),
+    radial-gradient(rgba(0,229,255,0.12) 1px, transparent 1.6px);
+  background-size: auto, 44px 44px, 44px 44px, 22px 22px;
+}
+.kf-vig { position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.13) 0 1px, transparent 1px 3px),
+              radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%); }
+.kf-hud { position: absolute; top: 8px; left: 10px; z-index: 5; pointer-events: none;
+  font: 11px/1.6 Consolas,monospace; color: #00ff9c; letter-spacing: 1.5px;
+  text-shadow: 0 0 8px rgba(0,255,156,0.65); }
+.kf-hud .dim { color: #3f6a58; text-shadow: none; }
+.kf-hud2 { position: absolute; bottom: 8px; right: 12px; z-index: 5; pointer-events: none;
+  font: 10px Consolas,monospace; color: #2e6b52; letter-spacing: 1.5px; }
+@keyframes kfblink { 50% { opacity: 0; } }
+.kf-hud b { animation: kfblink 1.1s steps(1) infinite; font-weight: normal; }
+.vis-tooltip { background: #060a10 !important; color: #cdd7e0 !important;
+  border: 1px solid rgba(0,255,156,0.45) !important; border-radius: 8px !important;
+  box-shadow: 0 0 16px rgba(0,255,156,0.25) !important;
+  font: 12.5px/1.6 Consolas,monospace !important; padding: 2px !important; }
+</style>"""
+        html = html.replace('<div id="mynetwork" class="card-body"></div>',
+                            f'<div id="mynetwork" class="card-body">{hud}</div>')
+        html = html.replace("</body>", css + js + "</body>")
         st.components.v1.html(html, height=640, scrolling=True)
         if mode == "hub":
-            st.caption("Kwadraty = kampanie (hub), kółka = materiały. Najedź — skrót; "
-                       "**kliknij węzeł/szprychę** — karta w świecie grafu (można otworzyć "
-                       "kilka naraz, przeciągać je i zamykać kliknięciem; klik w puste "
-                       "zamyka wszystkie).")
+            st.caption("Romby = kampanie (hub), kółka = materiały. "
+                       "Linia ciągła = twardy dowód, przerywana = podobieństwo. "
+                       "Najedź — skrót; **kliknij węzeł/szprychę** — karta w świecie "
+                       "grafu (można otworzyć kilka naraz, przeciągać je i zamykać "
+                       "kliknięciem; klik w puste zamyka wszystkie).")
         if hidden:
             st.caption(f"Ukryto {hidden} pojedynczych materiałów bez powiązań "
                        "(pełna lista na stronie Incydenty).")

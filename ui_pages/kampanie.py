@@ -9,8 +9,11 @@ head_box("KAMPANIE I MAPA POWIĄZAŃ", "// kolekcjoner fejków / klastry + graf"
 guide_box([
     "Każda karta to jedna kampania: kto w niej jest i jakie przesłanki ją zbudowały.",
     "Niżej — analizator dowolnej pary: przesłanki ZA i PRZECIW połączeniu.",
-    "Na dole — mapa powiązań: kampania = kwadratowy hub, szprychy łączą go z materiałami "
-    "(grubość = siła powiązania, czerwony = twarde przesłanki).",
+    "Na dole — mapa powiązań: kampania = romb-hub, szprychy łączą go z materiałami "
+    "(grubość = siła powiązania; linia ciągła = twarde przesłanki, przerywana = "
+    "podobieństwo).",
+    "Filtry nad grafem: przełącznik „tylko TWARDE”, min. podobieństwo (%), "
+    "wyszukiwanie (id / tytuł / domena / wizerunek) i pigułki wyboru kampanii.",
     "Najedź na węzeł/szprychę — karta pokaże tytuł, domeny, wizerunki, trackery i dowody.",
 ])
 

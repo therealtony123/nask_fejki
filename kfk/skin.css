@@ -273,4 +273,37 @@ a:hover { text-shadow: 0 0 8px rgba(0, 217, 255, .6); }
 .kf-head-title { font-family: inherit; font-size: 1.5rem; font-weight: 700; color: #e6edf3; letter-spacing: .04em; text-shadow: 0 0 18px rgba(0,255,156,.25); }
 .kf-guide { border: 1px dashed #1c2634; border-radius: 8px; padding: 10px 14px; margin-bottom: 1rem; background: rgba(15,21,32,.6); color: #8b98a5; font-size: .85rem; line-height: 1.7; }
 .kf-guide div::before { content: "▸ "; color: #00ff9c; }
+
+/* ---------- pasek filtrów grafu ---------- */
+[data-testid="stVerticalBlockBorderWrapper"]:has(.kf-fbar-title) {
+  position: relative;
+  border: 1px solid #1c2634 !important;
+  border-radius: 10px !important;
+  background: linear-gradient(180deg, rgba(0,255,156,.05), rgba(0,217,255,.015) 55%, transparent), #0c1220 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 0 26px rgba(0,255,156,.06) !important;
+  padding: .3rem 1rem .5rem !important;
+}
+[data-testid="stVerticalBlockBorderWrapper"]:has(.kf-fbar-title)::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(90deg, #00ff9c, #00d9ff 45%, transparent 80%);
+  box-shadow: 0 0 12px rgba(0,255,156,.7);
+}
+[data-testid="stVerticalBlockBorderWrapper"]:has(.kf-fbar-title) label {
+  font-size: .72rem !important; color: #7d8ca1 !important; letter-spacing: .05em;
+}
+[data-testid="stVerticalBlockBorderWrapper"]:has(.kf-fbar-title) [data-testid="stWidgetLabel"] { margin-bottom: .1rem; }
+.kf-fbar-title {
+  color: #4d5c6e; font-size: .68rem; font-weight: 600;
+  letter-spacing: .24em; margin: .1rem 0 .3rem;
+}
+.kf-fbar-title b { color: #00ff9c; text-shadow: 0 0 12px rgba(0,255,156,.5); font-weight: 600; }
+.kf-fstat {
+  color: #4d5c6e; font-size: .7rem; letter-spacing: .12em;
+  border-top: 1px dashed #1c2634; padding-top: .45rem; margin-top: .25rem;
+}
+.kf-fstat b { color: #00ff9c; }
+.kf-fstat .on { color: #00d9ff; }
+.kf-fstat .off { color: #ff5f57; animation: kf-pulse 1.6s ease-in-out infinite; }
 </style>
