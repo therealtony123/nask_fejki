@@ -201,14 +201,18 @@ Deduplikacja po domenie rejestrowalnej, pobieranie równoległe.
 
 ### Przykładowe dane
 
-- `samples/meta_ads_sample.json` — próbka w formacie odpowiedzi Meta Ad Library
-  zbudowana z **realnych materiałów reklamowych zbioru** (warianty kampanii:
-  fałszywe artykuły „zamach na Brzoskę", „Monika Olejnik", „wyprowadzono w
-  kajdankach", strony inwestycyjne, wideo reklamowe z realnym ID FB). Służy do
-  demo sekcji „Biblioteka reklam (bonus)" i trybu offline
-  `fb_collector.py --from-file` — bez tokena. Poprzednia syntetyczna próbka
-  (3 fikcyjne reklamy) została zachowana jako
-  `samples/meta_ads_sample.syntetyczna.json`.
+- `samples/meta_ads_sample.json` — **próbka demo2 (domyślna, bezpieczna na prezentacje)**:
+  8 fikcyjnych reklam w formacie odpowiedzi Meta Ad Library, bez prawdziwych osób i marek —
+  kampania „NeuroPower Plus” (3 warianty tego samego fałszywego artykułu na różnych
+  domenach, wspólne trackery GA/GTM), kampania „NovaTrade AI” (2 warianty strony bota
+  inwestycyjnego, wspólny GTM/AW) oraz 3 pojedyncze materiały (sklep z dronem, „dopłata
+  dla seniorów”, loteria). Służy do demo sekcji „Biblioteka reklam (bonus)” i trybu
+  offline `fb_collector.py --from-file` — bez tokena.
+- `samples/meta_ads_sample.realne.json` — poprzednia próbka zbudowana z **realnych
+  materiałów reklamowych zbioru** (zarchiwizowana; zawiera narracje z prawdziwymi
+  osobami publicznymi — stosuj ostrożnie przy publicznych prezentacjach).
+- `samples/meta_ads_sample.syntetyczna.json` — historyczna syntetyczna próbka
+  (3 fikcyjne reklamy) sprzed powstania próbek powyżej.
 - Zbiór organizatora (reklamy/scamy do analizy) NIE jest częścią repozytorium
   (zakaz rozpowszechniania) — wrzuć go do `data/` (struktura
   `data/do_udostępnienia/<id>/...`), a pipeline zbierze go sam.
