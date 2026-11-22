@@ -1,113 +1,260 @@
-# 🕵️ Kolekcjoner fejków
+# 🕵️ KOLEKCJONER FEJKÓW — FOLLOW THE FAKE
 
-Demonstrator do zadania **„Kolekcjoner fejków”** (HackNation 2026, wyzwanie NASK PIB):
-narzędzie, które z chaosu pojedynczych podejrzanych reklam **wydobywa wspólne ślady
-i łączy je w kampanie oszustw** — automatycznie, z czytelnym uzasadnieniem każdego
-powiązania.
+Narzędzie, które z chaosu pojedynczych podejrzanych reklam wydobywa wspólne ślady
+i łączy je w większe **kampanie oszustw**. Rozwiązanie automatycznie analizuje
+treść, warstwę wizualną i publicznie dostępne metadane infrastruktury, a następnie
+prezentuje podobieństwa i zależności między incydentami w czytelnej formie
+(klastry + graf z uzasadnieniem każdego powiązania).
+
+Projekt przygotowany na hackathon **HackNation 2026** — zadanie „Kolekcjoner Fejków"
+(NASK PIB).
+
+---
+
+## 1. Pipeline
 
 ```
-materiały (URL / tekst / zrzut ekranu / zbiór JSON)
-        │  ingest + publiczne metadane (DNS, RDAP)
-        ▼
-zestaw cech (tekst, obraz, domena, infrastruktura, osoby)
-        │  podobieństwo ważone + twarde sygnały
-        ▼
-graf krawędzi z przesłankami → union-find → KAMPANIE
-        │
-        ▼
-GUI: klastry • graf zależności • cechy • analiza nowego materiału
+Ingest ──► Cechy ──► Podobieństwo ważone ──► Graf + Louvain ──► Kampanie ──► UI
+         (tekst,     (multi-widok z          (krawędzie        (klastry    (Streamlit)
+          wizja,      przesłankami)          z dowodami)        z etykietami)
+          infra,
+          struktura)
 ```
 
-## Szybki start
+### 1.1 Ingest
 
-```bash
-python3 scripts/make_demo.py    # (opcjonalnie) wygeneruj zbiór demo 13 materiałów
-streamlit run app.py           # demonstrator: http://localhost:8501
-```
+Wejściem jest katalog ze zbiorem (struktura `do_udostępnienia/<id>/*`) lub pojedynczy
+URL (zakładka „Nowy materiał"). Każdy katalog to jeden **incydent** i może zawierać
+dowolny podzbiór materiałów: zapisane strony HTML (+zasoby), archiwa HAR, zrzuty
+ekranu, obrazy, wideo (mp4), pliki metadanych (.info.json z yt-dlp).
+Brakujące typy danych nie przerywają analizy — system działa na tym, co jest.
 
-Zbiór demo jest już wygenerowany w `data/demo_materials.jsonl` (ładuje się automatycznie).
+### 1.2 Cechy (pozyskiwanie)
 
-### Docker (preferowane przez organizatora)
+Pięć niezależnych widoków cech:
 
-```bash
-docker build -t kolekcjoner-fejkow .
-docker run -p 8501:8501 kolekcjoner-fejkow
-```
-
-### Zależności
-
-`streamlit`, `pillow`, `numpy`, `requests` (Zależność | licencja):
-streamlit — Apache-2.0, Pillow — HPND (MIT-CMU), numpy — BSD-3, requests — Apache-2.0.
-Bez kluczy API — całość działa offline (z wyszukiwaniem RDAP jako best-effort).
-
-## Metodyka (jak to działa)
-
-### 1. Ingest materiałów
-- **URL** — pobranie treści (HTML→tekst) + pełny łańcuch przekierowań HTTP;
-  **DNS**: adres IP hosta; **RDAP** (`rdap.org`, m.in. NASK dla .pl): serwery NS,
-  rejestrator, data rejestracji. Strona martwa / brak sieci ⇒ materiał jest
-  analizowany na pozostałych modaliowościach.
-- **Tekst**, **zrzut ekranu / kreatyw** (PNG/JPG), **zbiór JSONL** — pola:
-  `id, url, text, image, redirect_chain, ns, mx, ip`.
-- Tolerancja na dane niekompletne jest projektowa: każda cecha jest opcjonalna.
-
-### 2. Ekstrakcja cech
-| Modaliwość | Cechy | Metoda |
+| Widok | Cechy | Skąd |
 |---|---|---|
-| tekst/semantyka | n-gramy słowne (3), leksykon narracji scam (PL/EN), wzorce kwot (`5 000 zł`, `300%`), wizerunki osób (mała baza referencyjna) | normalizacja (NFKD, stopwordy PL), funkcje haszujące słowne, regex |
-| wizualia | dHash 64-bit obrazu | czysta implementacja PIL+numpy (odległość Hamminga) |
-| domena | domena rejestrowa (uproszczony PSL), tokeny subdomen, TLD | `registrable()` |
-| infrastruktura | domeny z przekierowań, zbiory NS/MX, IP | RDAP/DNS + logi/rekordy wejściowe |
+| **tekst** | tytuł (znormalizowany), treść strony, meta description/keywords, tekst z OCR zrzutów ekranu | HTML (BeautifulSoup), OCR (tesseract `pol+eng`) |
+| **wizja** | perceptual hashe (DCT-pHash + dHash, 64 bity), kolory dominujące, wymiary | każdy obraz incydentu (PIL+numpy+scipy) |
+| **infrastruktura** | domeny (pełne i rejestrowalne), ID trackerów (GA/GTM/Pixel/Clarity), usługi śledzące, łańcuchy przekierowań | HTML (linki, skrypty), HAR (każdy request/response) |
+| **wzorce domen** | TLD, segmentacja, słowopodobieństwo, entropia nazwy (np. `słowo-słowo` w nietypowym TLD) — schemat nazewniczy rzadko zmieniany przez operatora | analiza nazw domen rejestrowalnych |
+| **wizerunki osób** | twarze (detekcja YuNet + embeddingi SFace) identyfikowane względem bazy referencyjnej 14 osób najczęściej podszywanych w reklamach | obrazy incydentu + baza portretów z Wikipedii (`kfk/faces_ref/`) |
+| **struktura** | klasy CSS, skrypty JS, favicon md5 | HTML |
 
-### 3. Podobieństwo ważone (z renormalizacją wag)
-Dla pary materiałów liczymy składowe podobieństwa: `text` (0.75·Jaccard-n-gramów +
-0.25·Jaccard-słów kluczowych), `image` (1−Hamming/64), `domain`, `infra`, `persona`.
-Wynik ważony liczony jest **tylko po modaliowościach dostępnych dla obu materiałów**
-(wagi renormalizowane), a `confidence` = dostępna część wagi — brakujące dane nie
-fałszują porównania. Wagi konfigurowalne w GUI (suwaki), próg domyślny 0.45.
+Dodatkowo: md5 plików wideo i metadane z plików `.info.json` (np. ID reklamy
+na Facebooku). Wszystkie cechy są jawne i czytelne dla analityka — to fundament
+interpretowalności wyniku.
 
-### 4. Twarde sygnały (niezależne od progu — anty-duplikatowo)
-- identyczna domena rejestrowa,
-- near-duplikat obrazu: Hamming(dHash) ≤ 6,
-- duplikat/wariant tekstu: Jaccard n-gramów ≥ 0.8.
+### 1.3 Podobieństwo (ważone, multi-widok)
 
-### 5. Grupowanie w kampanie
-Krawędzią jest para powyżej progu **albo** z twardym sygnałem. Kampania = komponent
-spójności grafu (**union-find**). Każda krawędź przechowuje listę przesłanek
-(`Evidence`: modaliwość, opis, składowy wynik, waga) — pełna interpretowalność.
+Każdą parę incydentów porównuje się niezależnie w widokach:
 
-### 6. Analiza nowego materiału
-Nowy materiał porównujemy ze wszystkimi wcześniejszymi; przypisujemy do klastru
-najbliżej powiązanego przypadku, gdy krawędź przekracza próg lub daje twardy sygnał;
-w przeciwnym razie komunikat: **nowa kampania**. GUI pokazuje top-N podobieństw
-z przesłankami niezależnie od decyzji.
+- **tytuł** (waga 0.30) — równość/`difflib` na znormalizowanym tytule;
+- **trackery** (waga 0.30) — te same identyfikatory analityki (GA/Pixel/GTM)
+  to bardzo silny sygnał wspólnego operatora kampanii;
+- **obrazy** (waga 0.25) — odległość Hamminga pHash ≤ 12 lub dHash ≤ 8
+  oznacza duplikat/wariant graficzny;
+- **infrastruktura** (waga 0.20) — Jaccard zbioru domen rejestrowalnych
+  (z pominięciem platform/CDN — obecność FB/GA śledzą osobno widoki trackerów);
+- **treść** (waga 0.15) — cosinus TF-IDF n-gramów znakowych (2–4 znaki;
+  odporne na polską fleksję, brak zależności od języka modelu; aktywacja od
+  cos 0.30 przy tekstach ≥ 200 znaków — krótkie teksty reklamowe mają wysoki
+  przypadkowy overlap);
+- **struktura** (waga 0.10) — Jaccard klas CSS (wspólny szablon produkcyjny);
+- **wzorce domen** (waga 0.08) — wspólny schemat nazw domen (TLD + klasy
+  nazewnicze + entropia), z pominięciem platform/CDN; słaby sygnał, liczony
+  maks. jako 0.5, więc sam nie tworzy krawędzi — pomaga przy łączeniu z innymi;
+- **wizerunki** (waga 0.30) — ta sama osoba z bazy referencyjnej w obu
+  materiałach (np. „Monika Olejnik") lub ta sama niezidentyfikowana twarz
+  (cosinus embeddingów SFace ≥ 0.55). Umożliwia odkrywanie powiązań między
+  pozornie odrębnymi kampaniami (ten sam wizerunek-celebryta).
 
-## Struktura
+**Kluczowa własność (niekompletne dane):** wagi są normalizowane wyłącznie do
+widoków dostępnych *w obu* porównywanych materiałach. Brakująca cecha nie obniża
+sztucznie wyniku i nie psuje porównania.
 
-```
-app.py                       # demonstrator Streamlit (end-to-end)
-kolekcjoner/
-  model.py                   # Material, Features, Evidence, Link, Cluster
-  extract.py                 # ekstrakcja cech: tekst/dHash/domeny/DNS/RDAP
-  similarity.py              # podobieństwo ważone + twarde sygnały
-  cluster.py                # union-find, przypisywanie nowego materiału
-  ingest.py                  # URL/tekst/obraz/JSONL → Material
-scripts/make_demo.py         # generator zbioru demo (3 kampanie + 2 samotne)
-data/demo_materials.jsonl    # zbiór demo, data/ads/*.png — zrzuty
-tests/smoke.py               # test end-to-end rdzenia (bez GUI)
-Dockerfile                   # środowisko skonteneryzowane
-```
+Krawędź powstaje, gdy suma ważona ≥ **progu** (domyślnie 0.25). Każda krawędź
+zapisuje **listę przesłanek** — które konkretnie cechy ją utworzyły („identyczny
+tytuł «…»", „te same trackery: G-XXXX", „3 pasujące obrazy, odl. 5", …).
+Krawędź jest oznaczana jako **twarda**, gdy zachodzi: identyczny tytuł, wspólne
+ID analityki, co najmniej połowa obrazów jest wariantami lub ta sama
+zidentyfikowana osoba.
 
-## Testy
+### 1.4 Klastrowanie
+
+Graf incydentów (węzły = incydenty, krawędzie = udokumentowane podobieństwo)
+jest dzielony algorytmem **Louvain** (community detection, `networkx`) — kampanie
+nie muszą być klikami, co pozwala łączyć łańcuchy wariantów. Każda kampania
+dostaje **stabilny identyfikator** (kotwica = najmniejszy oryginalny incydent),
+więc nazwa kampanii nie zmienia się po dołożeniu nowych materiałów.
+
+### 1.5 Nowy materiał vs zbiór
+
+Nowy materiał (URL) przechodzi tę samą ekstrakcję cech, jest porównywany ze
+wszystkimi zapisanymi incydentami, po czym:
+
+- jeśli najlepsze dopasowanie ≥ **progu przypisania** (0.30) → materiał
+  przypisywany do kampanii najsilniejszego sąsiada (głosowanie ważone),
+- w przeciwnym razie → zgłaszany jako **nowy wzorzec działania**.
+
+### 1.6 Eksport dla CSIRT: STIX 2.1 + watchlista IoC
+
+Po klastrowaniu pipeline generuje dwa artefakty wdrożeniowe:
+
+- **pakiet STIX 2.1** (`*.stix.json`): obiekty `campaign` (z opisem przesłanek
+  i pierwszą/ostatnią aktywnością), `incident` (z cechami: domeny, ID trackerów),
+  `indicator` (pattern `domain-name` dla domen) oraz relacje
+  `incident -attributed-to-> campaign`, `indicator -indicates-> campaign`
+  i `incident -related-to-> incident` — te ostatnie zawierają **listę przesłanek
+  w polu description i poziom ufności (0–100) = ważone podobieństwo**;
+- **watchlista IoC** (`*.ioc.csv`): domeny, ID trackerów (GA/GTM/Pixel), hashe
+  faviconów i wideo z przypisaniem do kampanii i incydentu źródłowego.
+
+Oba pliki są do pobrania w zakładce „Eksport (STIX/IoC)" demonstratora i mogą
+trafić wprost do MISP/OpenCTI.
+
+### 1.7 Interpretowalność w obie strony
+
+Każda para materiałów ma jawne **przesłanki ZA i PRZECIW** połączeniu (zakładka
+„Kampanie" → „Dlaczego materiały NIE zostały połączone?"). Brakujące dane są
+komunikowane wprost — analityk widzi, że rozdzielenie wynika z dowodów, a nie
+z braku informacji.
+
+### 1.8 Bonus: biblioteka reklam
+
+Opcjonalna integracja z **Meta Ad Library API** (zakładka „Biblioteka reklam"):
+wyszukiwanie reklam wg słów kluczowych (np. „zarabiaj z domu") i porównywanie
+ich treści ze znanymi kampaniami. Wymaga tokena Graph API (instrukcja w
+`kfk/adlibrary.py`); bez tokena zakładka działa na zapisanej syntetycznej próbce
+`samples/meta_ads_sample.json`.
+
+---
+
+## 2. Uruchomienie
+
+### Lokalnie (Python ≥ 3.11)
 
 ```bash
-python3 tests/smoke.py   # ingest → cechy → klastry → nowy materiał; asercje grupowania
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+# opcjonalnie polski model OCR (bez niego OCR działa po angielsku):
+mkdir -p tessdata && curl -sL -o tessdata/pol.traineddata \
+  https://github.com/tesseract-ocr/tessdata_fast/raw/main/pol.traineddata
+
+# pipeline (CLI):
+TESSDATA_PREFIX="$PWD/tessdata" .venv/bin/python pipeline.py data --db kfk.sqlite
+
+# modele twarzy (YuNet+SFace) — jeśli nie ma ich w kfk/models/:
+bash scripts/download_models.sh
+
+# demonstrator:
+TESSDATA_PREFIX="$PWD/tessdata" .venv/bin/streamlit run app.py
 ```
 
-## Ograniczenia / dalszy rozwój
-- NS/MX obecnie z RDAP (dla domen, gdzie RDAP odpowiada) lub z danych wejściowych
-  (log/rekord) — łatwo dorzucić zapytania DNS typu NS/MX.
-- Wyszukiwanie reklam w bibliotekach reklam (Google Ad Transparency API) — punkt wejścia
-  `ingest.from_url` + słowa kluczowe z `extract.SCAM_LEXICON` są gotowe do podłączenia.
-- Skalowanie: porównania par O(n²) — dla dużych zbiorów zastąpić LSH/MinHashem
-  po n-gramach i dHashach (struktura modułowa to umożliwia bez zmian GUI).
+Otwórz http://localhost:8501 — w panelu bocznym ustaw katalog danych i kliknij
+**▶ Uruchom analizę**.
+
+### Docker
+
+```bash
+docker compose up --build
+```
+
+Dane montowane z `./data`, baza `./kfk.sqlite`. W obrazie jest tesseract z polskim
+modelem.
+
+Wymagania systemowe lokalnie: `tesseract-ocr` (dla OCR; opcjonalne).
+
+### Pomocnik: zbieranie reklam z Meta Ad Library (CLI)
+
+```bash
+# z tokenem Graph API (uprawnienie ads_read):
+python fb_collector.py --token TOKEN --terms "zarabiaj z domu" --run-pipeline
+# tryb offline (próbka do demo, bez tokena):
+python fb_collector.py --from-file samples/meta_ads_sample.json --run-pipeline
+```
+
+Każda reklama trafia do zbioru jako incydent (`data/do_udostępnienia/ad_<ID>/`),
+pipeline przelicza kampanie, a raport wskazuje **PRZYPISANO DO KAMPANII** lub
+**NOWY WZORZEC** (próg `--join`, domyślnie 0.30). Deduplikacja po ID reklamy,
+paginacja przez `--pages`.
+
+### Pomocnik 2: zbieranie podejrzanych stron z otwartych źródeł (bez kluczy API)
+
+```bash
+python harvest_urls.py --source both --pages 3 --max 50 --run-pipeline
+```
+
+Pobiera świeże podejrzane strony z publicznych źródeł (**OpenPhish** — feed
+phishingowych URL-i, **AA419** — baza fałszywych banków i platform
+inwestycyjnych), zapisuje je jako incydenty (`harvest_<seq>/` z `page.html`,
+`meta.json` i obrazami), a następnie uruchamia pipeline i raportuje, które
+strony da się powiązać ze znanymi kampaniami, a które to nowe wzorce.
+Deduplikacja po domenie rejestrowalnej, pobieranie równoległe.
+
+### Przykładowe dane
+
+- `samples/meta_ads_sample.json` — **syntetyczna** próbka odpowiedzi Meta Ad
+  Library (3 fikcyjne reklamy: dwa warianty znanych kampanii + jeden nowy
+  wzorzec). Służy do demo zakładki „Biblioteka reklam" i trybu offline
+  `fb_collector.py --from-file` — bez tokena.
+- Zbiór organizatora (reklamy/scamy do analizy) NIE jest częścią repozytorium
+  (zakaz rozpowszechniania) — wrzuć go do `data/` (struktura
+  `data/do_udostępnienia/<id>/...`), a pipeline zbierze go sam.
+- `harvest_urls.py` pozyskuje świeże podejrzane strony z publicznych źródeł
+  (OpenPhish, AA419) i zapisuje je jako incydenty `harvest_*` w `data/` —
+  lokalnie, bez wrzucania zebranych stron do repo.
+
+---
+
+## 3. Zależności i licencje
+
+| Biblioteka | Licencja |
+|---|---|
+| numpy, scipy, pillow | BSD-3 / BSD |
+| networkx | BSD-3 |
+| streamlit | Apache-2.0 |
+| beautifulsoup4, lxml | MIT / BSD-3 |
+| requests | Apache-2.0 |
+| pytesseract (opcjonalny) | Apache-2.0 |
+| pyvis (wizualizacja grafu) | BSD-3 |
+| opencv-contrib-python-headless | Apache-2.0 |
+
+Modele: tesseract `tessdata_fast` (Apache-2.0); YuNet + SFace z OpenCV Zoo
+(Apache-2.0, pliki w `kfk/models/`). Zdjęcia w bazie referencyjnej twarzy
+pochodzą z Wikipedii/Wikimedia — licencje CC BY / CC BY-SA / CC0 / Public
+domain, szczegółowo w `kfk/faces_ref/manifest.json` (skrypt pobierający:
+`scripts/build_faces_ref.py`). Brak zewnętrznych API i kluczy — całość działa
+offline na dostarczonych materiałach. Pobieranie URL-i w zakładce „Nowy
+materiał" i Meta Ad Library wymagają dostępu do internetu.
+
+## 4. Ograniczenia (świadome)
+
+- **Domena rejestrowalna** liczona naiwnie (ostatnie 2 etykiety) — wystarcza dla
+  demonstracji; w wersji produkcyjnej należy użyć Public Suffix List.
+- **IP/WHOIS/RDAP** celowo nie wchodzą w pipeline offline (dane mogą być
+  niedostępne); rozszerzenie o wzbogacenie RDAP/cert.sh jest przewidziane jako
+  plugin po stronie „wzbogacania".
+- Klasteryzacja jest deterministyczna (seed), ale zmiana progu zmienia ziarnistość
+  kampanii — progi są parametryzowane w UI.
+- Dane organizatora nie są częścią tego repozytorium (klauzula o zakazie
+  rozpowszechniania).
+
+## 5. Struktura kodu
+
+```
+pipeline.py            # CLI: pełny przebieg analizy
+app.py                 # demonstrator Streamlit
+fb_collector.py        # pomocnik: Meta Ad Library -> zbiór -> identyfikacja
+kfk/
+  features.py          # ingest + ekstrakcja cech (tekst/wizja/infra/struktura/wizerunki)
+  similarity.py        # TF-IDF + ważone podobieństwo multi-widok + przesłanki
+  cluster.py           # graf, Louvain, przypisywanie nowych materiałów
+  store.py             # trwałość: SQLite (incydenty, krawędzie, kampanie)
+  stix.py              # eksport STIX 2.1 + watchlista IoC + oś czasu
+  faces.py             # detekcja twarzy (YuNet) + embeddingi (SFace) + baza referencyjna
+  adlibrary.py         # integracja z Meta Ad Library API
+scripts/build_faces_ref.py  # pobieranie portretów referencyjnych (Wikipedia)
+eda.py                 # eksploracyjna analiza zbioru
+```
