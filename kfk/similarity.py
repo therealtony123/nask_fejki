@@ -17,6 +17,9 @@ VIEW_WEIGHTS = {
     "structure": 0.10,  # wspólny szablon HTML (klasy CSS, skrypty, favicon)
     "domain_pattern": 0.08,  # wspólny wzorzec nazw domen (TLD + schemat nazewniczy)
     "faces": 0.30,      # te same wizerunki osób (baza referencyjna / embeddingi twarzy)
+    "narrative": 0.10,  # wspólna narracja scam (leksykon + wzorce kwot) — miękki sygnał:
+                        # sam (nawet score 1.0) daje ~0.10 < EDGE_THRESHOLD 0.25, więc
+                        # nie tworzy krawędzi, tylko wzmacnia istniejące przesłanki
 }
 EDGE_THRESHOLD = 0.25       # próg tworzenia krawędzi
 PHASH_MAX_DIST = 12
@@ -177,6 +180,22 @@ def view_scores(fa: dict, fb: dict, tfidf: Tfidf) -> tuple:
             views["faces"] = (s, ev)
         else:
             views["faces"] = (0.0, [])
+    # 9. narracja scam — wspólne frazy leksykonu + wzorce kwot (miękki sygnał)
+    sa = (fa["text"].get("scam") or {}).get("terms") or []
+    sb = (fb["text"].get("scam") or {}).get("terms") or []
+    if sa and sb:
+        shared = set(sa) & set(sb)
+        if len(shared) >= 2:
+            ev = [f"wspólna narracja scam: {', '.join(sorted(shared)[:4])}"]
+            ma = (fa["text"].get("scam") or {}).get("money") or []
+            mb = (fb["text"].get("scam") or {}).get("money") or []
+            shared_money = set(ma) & set(mb)
+            if shared_money:
+                ev.append(f"{len(shared_money)} pasujących wzorców kwot")
+            views["narrative"] = (round(min(1.0, len(shared) / 3), 3), ev)
+        elif len(shared) == 1:
+            views["narrative"] = (0.0, [])  # 1 wspólna fraza — przesłanka za słaba
+    # (brak scam po którejś stronie lub 0 wspólnych fraz → brak widoku, nie licz w wagach)
     # twarde przesłanki
     hard = []
     if ta and tb and ta == tb:

@@ -37,11 +37,8 @@ inject_theme()
 
 pages = [
     st.Page("ui_pages/start.py", title="Start — kreator", icon="🏠", default=True),
-    st.Page("ui_pages/kampanie.py", title="Kampanie", icon="🗂️"),
-    st.Page("ui_pages/mapa.py", title="Mapa powiązań", icon="🕸️"),
-    st.Page("ui_pages/incydenty.py", title="Incydenty", icon="📁"),
-    st.Page("ui_pages/nowy.py", title="Sprawdź nowy materiał", icon="🔍"),
-    st.Page("ui_pages/metodyka.py", title="Metodyka i wyniki", icon="📘"),
+    st.Page("ui_pages/kampanie.py", title="Kampanie i mapa", icon="🗂️"),
+    st.Page("ui_pages/incydenty.py", title="Materiały i sprawdzenie", icon="🔍"),
 ]
 pg = st.navigation(pages)
 

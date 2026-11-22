@@ -1,4 +1,4 @@
-"""Start — kreator: status zbioru, metryki, co dalej."""
+"""Start — kreator: status zbioru, metryki, eksport STIX/IoC, skrót metodyki."""
 import io
 import zipfile
 from datetime import datetime
@@ -7,14 +7,15 @@ from pathlib import Path
 import streamlit as st
 
 from kfk.skin import guide_box, head_box
-from ui_common import DEFAULT_DATA
+from ui_common import DEFAULT_DATA, render_export
 
 head_box("START — KREATOR ANALIZY", "// kolekcjoner fejków / start")
 guide_box([
     "1. Zbiór ładuje się sam (dane w katalogu data/ — struktura do_udostępnienia/<id>/).",
     "2. W panelu bocznym możesz ustawić progi i kliknąć ▶ Uruchom analizę.",
-    "3. Wyniki zobaczysz na stronach: Kampanie • Mapa powiązań • Incydenty.",
-    "4. Nowy materiał sprawdzisz na stronie „Sprawdź nowy materiał”.",
+    "3. Wyniki zobaczysz na stronach: Kampanie i mapa • Materiały i sprawdzenie.",
+    "4. Nowy materiał sprawdzisz w sekcji „Sprawdź nowy materiał (URL)” "
+    "na stronie „Materiały i sprawdzenie”.",
 ])
 
 # ------------------------------------------------------------- upload materiałów
@@ -132,9 +133,39 @@ if graph:
         for c in big[:6]:
             ex = " / ".join(titles.get(m, m) for m in c["members"][:2])
             st.write(f"• **{c['cluster_id']}** — {len(c['members'])} materiałów · {ex}")
-        st.caption("Pełny przegląd z podglądami materiałów: strona **Kampanie**.")
+        st.caption("Pełny przegląd z podglądami materiałów: strona **Kampanie i mapa**.")
     else:
         st.info("Brak kampanii wieloelementowych — uruchom analizę.")
 else:
     st.info("Brak wyników. Uruchom analizę w panelu bocznym (▶ Uruchom analizę) "
             "albo wczytaj zapisane wyniki.")
+
+# ------------------------------------------------------------- eksport STIX/IoC
+
+st.markdown("---")
+st.markdown("### 📦 Eksport (STIX/IoC)")
+db = st.session_state.get("db")
+if not db:
+    st.info("Uruchom analizę, aby wygenerować eksporty.")
+else:
+    render_export(db)
+
+# ------------------------------------------------------------- metodyka (skrót)
+
+with st.expander("📘 Metodyka — jak to działa", expanded=False):
+    st.markdown("""
+**1. Cechy (pięć widoków):** tekst/OCR • wizja (pHash/dHash, kolory) •
+infrastruktura (domeny, trackery GA/Pixel/GTM, przekierowania z HAR) •
+wzorce nazw domen (TLD, entropia) • wizerunki osób (YuNet + SFace vs baza 14 osób).
+
+**2. Podobieństwo:** ważona suma widoków; wagi normalizowane do cech dostępnych
+w obu materiałach (odporność na niekompletne dane). Każda krawędź ma jawne
+przesłanki — „dlaczego połączono".
+
+**3. Kampanie:** graf incydentów → Louvain (community detection) → stabilne
+identyfikatory kampanii. Nowy materiał: przypisanie do kampanii (głosowanie
+ważone) albo nowy wzorzec.
+
+**4. Odporność:** brakujące dane pomijane; duplikaty wyłapywane hashami
+percepcyjnymi; przesłanki PRZECIW pokazują, czemu materiały pozostały rozdzielone.
+""")

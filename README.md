@@ -24,7 +24,8 @@ Ingest ──► Cechy ──► Podobieństwo ważone ──► Graf + Louvain 
 ### 1.1 Ingest
 
 Wejściem jest katalog ze zbiorem (struktura `do_udostępnienia/<id>/*`) lub pojedynczy
-URL (zakładka „Nowy materiał"). Każdy katalog to jeden **incydent** i może zawierać
+URL (sekcja „Sprawdź nowy materiał (URL)" na stronie „Materiały i sprawdzenie").
+Każdy katalog to jeden **incydent** i może zawierać
 dowolny podzbiór materiałów: zapisane strony HTML (+zasoby), archiwa HAR, zrzuty
 ekranu, obrazy, wideo (mp4), pliki metadanych (.info.json z yt-dlp).
 Brakujące typy danych nie przerywają analizy — system działa na tym, co jest.
@@ -111,22 +112,24 @@ Po klastrowaniu pipeline generuje dwa artefakty wdrożeniowe:
 - **watchlista IoC** (`*.ioc.csv`): domeny, ID trackerów (GA/GTM/Pixel), hashe
   faviconów i wideo z przypisaniem do kampanii i incydentu źródłowego.
 
-Oba pliki są do pobrania w zakładce „Eksport (STIX/IoC)" demonstratora i mogą
+Oba pliki są do pobrania w sekcji „Eksport (STIX/IoC)" na stronie „Start — kreator"
+demonstratora i mogą
 trafić wprost do MISP/OpenCTI.
 
 ### 1.7 Interpretowalność w obie strony
 
-Każda para materiałów ma jawne **przesłanki ZA i PRZECIW** połączeniu (zakładka
-„Kampanie" → „Dlaczego materiały NIE zostały połączone?"). Brakujące dane są
+Każda para materiałów ma jawne **przesłanki ZA i PRZECIW** połączeniu (strona
+„Kampanie i mapa" → „Dlaczego materiały NIE zostały połączone?"). Brakujące dane są
 komunikowane wprost — analityk widzi, że rozdzielenie wynika z dowodów, a nie
 z braku informacji.
 
 ### 1.8 Bonus: biblioteka reklam
 
-Opcjonalna integracja z **Meta Ad Library API** (zakładka „Biblioteka reklam"):
+Opcjonalna integracja z **Meta Ad Library API** (sekcja „Biblioteka reklam (bonus)"
+na stronie „Materiały i sprawdzenie"):
 wyszukiwanie reklam wg słów kluczowych (np. „zarabiaj z domu") i porównywanie
 ich treści ze znanymi kampaniami. Wymaga tokena Graph API (instrukcja w
-`kfk/adlibrary.py`); bez tokena zakładka działa na zapisanej syntetycznej próbce
+`kfk/adlibrary.py`); bez tokena sekcja działa na zapisanej syntetycznej próbce
 `samples/meta_ads_sample.json`.
 
 ---
@@ -197,7 +200,7 @@ Deduplikacja po domenie rejestrowalnej, pobieranie równoległe.
 
 - `samples/meta_ads_sample.json` — **syntetyczna** próbka odpowiedzi Meta Ad
   Library (3 fikcyjne reklamy: dwa warianty znanych kampanii + jeden nowy
-  wzorzec). Służy do demo zakładki „Biblioteka reklam" i trybu offline
+  wzorzec). Służy do demo sekcji „Biblioteka reklam (bonus)" i trybu offline
   `fb_collector.py --from-file` — bez tokena.
 - Zbiór organizatora (reklamy/scamy do analizy) NIE jest częścią repozytorium
   (zakaz rozpowszechniania) — wrzuć go do `data/` (struktura
@@ -226,8 +229,9 @@ Modele: tesseract `tessdata_fast` (Apache-2.0); YuNet + SFace z OpenCV Zoo
 pochodzą z Wikipedii/Wikimedia — licencje CC BY / CC BY-SA / CC0 / Public
 domain, szczegółowo w `kfk/faces_ref/manifest.json` (skrypt pobierający:
 `scripts/build_faces_ref.py`). Brak zewnętrznych API i kluczy — całość działa
-offline na dostarczonych materiałach. Pobieranie URL-i w zakładce „Nowy
-materiał" i Meta Ad Library wymagają dostępu do internetu.
+offline na dostarczonych materiałach. Pobieranie URL-i w sekcji „Sprawdź nowy
+materiał (URL)" (strona „Materiały i sprawdzenie") i Meta Ad Library wymagają
+dostępu do internetu.
 
 ## 4. Ograniczenia (świadome)
 

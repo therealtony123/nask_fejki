@@ -51,6 +51,70 @@ def norm_text(s: str) -> str:
     return re.sub(r"[^a-z0-9ąćęłńóśźż]+", " ", s.lower()).strip()
 
 
+# Leksykon fraz typowych dla narracji oszustw (PL + EN). Celowo frazy wielowyrazowe:
+# pojedyncze słowa dawałyby szum na uczciwych stronach (wyjątek: „skandal"/„shocking"
+# — bardzo charakterystyczne). Żadna fraza nie pasuje do treści fixtury „Tanie kredyty
+# online" (tests/smoke.py, incydent c) poza „bez wychodzenia z domu", której NIE
+# zawierają fixtury a/b — dzięki temu widok narracji nie łączy incydentów różnych kampanii.
+SCAM_LEXICON = [
+    # PL — zarabianie / inwestycje
+    "zarabiaj z domu", "bez wychodzenia z domu", "gwarantowany zysk",
+    "zysk od pierwszego dnia", "pewny zysk", "gwarantowany zwrot",
+    "sprawdź ile możesz zarobić", "zarobisz nawet", "bez ryzyka",
+    "inwestycja gwarantuje", "bonus na start",
+    # PL — presja czasu / tajemnica
+    "zanim usuną", "zanim będzie za późno", "ostatnia szansa", "tylko dziś",
+    "nie powiedzieli w telewizji", "oni tego nie chcą", "banki tego nie chcą",
+    "lekarze tego nie chcą", "eksperci ostrzegają",
+    # PL — sensacja / skandal
+    "wstrząsające szczegóły", "szokujące doniesienia", "skandal",
+    "wyprowadzono go w kajdankach", "media o tym milczą",
+    # PL — cudowne zdrowie / zamów
+    "cudowny lek", "rewolucyjny lek", "lek na stawy", "zamów teraz",
+    # EN — zarabianie / inwestycje
+    "earn from home", "make money online", "guaranteed profit", "no risk",
+    "double your money", "passive income", "get rich quick", "sign up bonus",
+    # EN — presja czasu / tajemnica
+    "before they delete", "before it's too late", "act now", "last chance",
+    "they don't want you to know", "banks don't want", "doctors hate",
+    "experts warn",
+    # EN — sensacja / zdrowie / zamów
+    "shocking", "miracle cure", "one weird trick", "order now",
+]
+
+_MONEY_AMOUNT_RE = re.compile(r"(?<!\d)\d+(?:[ \u00a0.]\d{3})*\s*zł")
+_MONEY_PERCENT_RE = re.compile(r"\d+\s*%")
+
+
+def scam_narrative(text: str) -> dict:
+    """Frazy z SCAM_LEXICON i wzorce kwot (zł, %) znalezione w tekście.
+
+    Uzasadnienie normalizacji: używamy surowego lowercase + ściśnięcia białych
+    znaków zamiast norm_text z dwóch powodów: (1) norm_text usuwa znaki „%",
+    kropki i spacje grupujące, więc wzorce kwot („50%", „1 500 zł") przestałyby
+    działać; (2) norm_text wstawia spacje w miejscach interpunkcji, co mogłoby
+    sztucznie dopasować frazy rozdzielone znakiem (np. „zamów-teraz"). NBSP
+    zamieniamy na zwykłą spację, żeby „1 500 zł" i teksty łamane w liniach się
+    dopasowały.
+    """
+    if not text:
+        return {"terms": [], "money": []}
+    low = re.sub(r"[\u00a0\s]+", " ", text.lower()).strip()
+    terms = [p for p in SCAM_LEXICON if p in low]
+    spans = []
+    for rx in (_MONEY_AMOUNT_RE, _MONEY_PERCENT_RE):
+        for m in rx.finditer(low):
+            spans.append((m.start(), m.end(), m.group(0)))
+    # odrzuć dopasowania będące fragmentem dłuższego (np. „000 zł" ⊂ „100 000 zł")
+    spans.sort(key=lambda s: (s[1] - s[0]), reverse=True)
+    kept = []
+    for s0, s1, txt in spans:
+        if not any(k0 <= s0 and s1 <= k1 and (k0, k1) != (s0, s1)
+                   for k0, k1, _ in kept):
+            kept.append((s0, s1, txt))
+    return {"terms": terms, "money": [t for _, _, t in kept]}
+
+
 def _md5_file(p: Path, chunk=1 << 20):
     h = hashlib.md5()
     with open(p, "rb") as f:
@@ -469,6 +533,10 @@ def extract_incident(inc: dict) -> dict:
     feats["structure"]["css_classes"] = sorted(set(feats["structure"]["css_classes"]))
     feats["structure"]["scripts"] = sorted(set(feats["structure"]["scripts"]))
     feats["text"]["body_norm"] = norm_text(feats["text"]["body"] + " " + feats["text"]["ocr"])
+    feats["text"]["scam"] = scam_narrative(
+        feats["text"]["body"] + " " + feats["text"]["title"] + " " +
+        feats["text"]["meta_desc"] + " " + feats["text"]["ocr"]
+    )
     return feats
 
 
@@ -503,4 +571,7 @@ def extract_from_url_text(url: str, html: str, redirects: list) -> dict:
     feats["infra"]["registrable"] = sorted({registrable(d) for d in doms if registrable(d)})
     feats["infra"]["domain_patterns"] = domain_patterns(feats["infra"]["registrable"])
     feats["text"]["body_norm"] = norm_text(h["body"])
+    feats["text"]["scam"] = scam_narrative(
+        h["body"] + " " + h["title"] + " " + h["meta_desc"]
+    )
     return feats
