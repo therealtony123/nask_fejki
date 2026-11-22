@@ -44,7 +44,7 @@ st.markdown(
 <div class="kf-guide">
   <div><b>Krok 1 — gotowy:</b> w zbiorze jest już {len(features)} materiałów
        (przykładowy zbiór wczytuje się sam przy starcie).</div>
-  <div>Przejdź teraz po kolei przez kroki 2–5 — każdy to jedna pozycja w menu po lewej.</div>
+  <div>Przejdź teraz po kolei przez kroki 2–6 — każdy to jedna pozycja w menu po lewej.</div>
 </div>
     """, unsafe_allow_html=True)
 
@@ -53,7 +53,8 @@ steps = [
     ("2", "Kampanie", "Zobacz, na jakie grupy materiały się złożyły — i dlaczego."),
     ("3", "Mapa powiązań", "To samo, ale obrazowo: animowana mapa „kulek” i nici."),
     ("4", "Sprawdź nowy materiał", "Wrzuć świeży materiał i zobacz, do czego pasuje."),
-    ("5", "Metodyka i wyniki", "Jak to działa + pobierz raport z wynikami."),
+    ("5", "Autopilot — radar", "Sam szuka nowych odsłon Twoich kampanii w sieci."),
+    ("6", "Metodyka i wyniki", "Jak to działa + pobierz raport z wynikami."),
 ]
 st.markdown(
     '<div class="kf-steps">' + "".join(
@@ -71,7 +72,7 @@ c[1].page_link("kolekcjoner/ui_pages/mapa.py",
 c[2].page_link("kolekcjoner/ui_pages/nowy.py",
                label="KROK 4 ▸ Nowy materiał", icon="🔍")
 c[3].page_link("kolekcjoner/ui_pages/metodyka.py",
-               label="KROK 5 ▸ Pobierz wynik", icon="📘")
+               label="KROK 6 ▸ Pobierz wynik", icon="📘")
 
 # --- własny zbiór ---
 st.divider()

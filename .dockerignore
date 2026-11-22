@@ -1,0 +1,17 @@
+# srodowiska i repo
+.venv/
+.git/
+__pycache__/
+*.pyc
+
+# drugi modul (ma wlasny Dockerfile w kolekcjoner-fejkow/)
+kolekcjoner-fejkow/
+
+# bazy/wygenerowane
+*.sqlite*
+*.graph.json
+demo_graf_neon.html
+
+# systemowe
+tmp/
+*.log

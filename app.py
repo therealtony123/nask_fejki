@@ -32,6 +32,8 @@ pages = [
             title="Sprawdź nowy materiał", icon="🔍"),
     st.Page("kolekcjoner/ui_pages/szukaj.py",
             title="Szukaj powiązanych", icon="🛰️"),
+    st.Page("kolekcjoner/ui_pages/radar.py",
+            title="Autopilot — radar", icon="📡"),
     st.Page("kolekcjoner/ui_pages/metodyka.py",
             title="Metodyka i wyniki", icon="📘"),
 ]

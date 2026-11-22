@@ -2,6 +2,7 @@
 import streamlit as st
 
 from kolekcjoner import ui
+from kolekcjoner.report import campaign_report_md
 
 ui.hero(compact=True)
 st.subheader("Kampanie — na jakie grupy złożyły się materiały")
@@ -54,6 +55,17 @@ for i, c in enumerate(sorted(clusters, key=lambda x: -len(x.members))):
             f'<span class="{badge_cls}">{badge}</span></div>'
             f'<div class="kf-members">{chips}</div></div>',
             unsafe_allow_html=True)
+        # Takedown Pack — raport dowodowy kampanii (CERT-ready)
+        try:
+            md = campaign_report_md(c, st.session_state.materials,
+                                    features, links)
+            st.download_button(
+                "📄 Takedown pack", data=md,
+                file_name=f"{c.cluster_id}_takedown.md",
+                mime="text/markdown", key=f"td_{c.cluster_id}",
+                use_container_width=True)
+        except Exception as e:                    # noqa: BLE001
+            st.caption(f"(takedown pack niedostępny: {e})")
         if c.links:
             with st.expander(f"Dlaczego te materiały są razem? "
                              f"({len(c.links)} powiązań)"):
