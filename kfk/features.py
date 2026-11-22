@@ -22,6 +22,8 @@ try:
 except ImportError:
     HAS_OCR = False
 
+from .enrich import enrich_domains
+
 IMG_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
 VID_EXT = {".mp4", ".webm", ".mov"}
 TITLE_MAX = 200
@@ -233,14 +235,14 @@ def parse_har(p: Path) -> dict:
         res = e.get("response", {})
         url = req.get("url", "")
         m = re.match(r"https?://([^/]+)", url)
-        if m:
+        if m and _valid_host(m.group(1)):
             out["domains"].append(m.group(1))
         out["urls"].append(url)
         redir = res.get("redirectURL")
         if redir:
             out["redirects"].append([url, redir])
             m2 = re.match(r"https?://([^/]+)", redir)
-            if m2:
+            if m2 and _valid_host(m2.group(1)):
                 out["domains"].append(m2.group(1))
     for u in out["urls"]:
         low = u.lower()
@@ -255,8 +257,29 @@ def parse_har(p: Path) -> dict:
     return out
 
 
+_BAD_HOST_CHARS = set('<>?$;\'"\\ ')
+
+
+def _valid_host(host: str) -> bool:
+    """Czy napis wygląda na nazwę domeny (etykiety [a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?,
+    TLD alfabetyczna; odrzuca śmieci typu '<?php echo ... ?>')."""
+    if not host or any(c in _BAD_HOST_CHARS for c in host):
+        return False
+    host = host.lower().split(":")[0].rstrip(".")
+    if not host or len(host) > 253:
+        return False
+    labels = host.split(".")
+    if any(not lbl or not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", lbl)
+           for lbl in labels):
+        return False
+    tld = labels[-1]
+    return tld.isalpha() or tld.startswith("xn--")
+
+
 def registrable(host: str) -> str:
     """Naiwna rejestrowalna domena (ostatnie 2 etykiety); patrz README — ograniczenie."""
+    if not _valid_host(host):
+        return ""
     host = host.lower().split(":")[0]
     parts = [x for x in host.split(".") if x]
     if len(parts) >= 2:
@@ -377,7 +400,7 @@ def extract_incident(inc: dict) -> dict:
             feats["structure"]["favicon_md5"] = h["favicon_md5"]
         for u in h["links"] + h["imgs"] + h["scripts"]:
             m = re.match(r"https?://([^/]+)", u)
-            if m:
+            if m and _valid_host(m.group(1)):
                 feats["infra"]["domains"].append(m.group(1))
     for hp in inc["har"]:
         hr = parse_har(hp)
@@ -436,8 +459,10 @@ def extract_incident(inc: dict) -> dict:
         })
     # finalne porządki
     feats["infra"]["domains"] = sorted({d.lower() for d in feats["infra"]["domains"]
-                                        if registrable(d) not in KNOWN_PLATFORMS})
-    feats["infra"]["registrable"] = sorted({registrable(d) for d in feats["infra"]["domains"]})
+                                        if registrable(d) and registrable(d) not in KNOWN_PLATFORMS})
+    feats["infra"]["registrable"] = sorted({registrable(d) for d in feats["infra"]["domains"]
+                                            if registrable(d)})
+    feats["infra"]["rdap"] = enrich_domains(feats["infra"]["registrable"])
     feats["infra"]["domain_patterns"] = domain_patterns(feats["infra"]["registrable"])
     feats["infra"]["tracker_ids"] = sorted(set(feats["infra"]["tracker_ids"]))
     feats["infra"]["tracker_services"] = sorted(feats["infra"]["tracker_services"])
@@ -471,10 +496,11 @@ def extract_from_url_text(url: str, html: str, redirects: list) -> dict:
     doms = set()
     for u in [url] + [r[1] for r in redirects] + h["links"] + h["imgs"] + h["scripts"]:
         m = re.match(r"https?://([^/]+)", u)
-        if m:
+        if m and _valid_host(m.group(1)):
             doms.add(m.group(1).lower())
-    feats["infra"]["domains"] = sorted({d for d in doms if registrable(d) not in KNOWN_PLATFORMS})
-    feats["infra"]["registrable"] = sorted({registrable(d) for d in doms})
+    feats["infra"]["domains"] = sorted({d for d in doms
+                                        if registrable(d) and registrable(d) not in KNOWN_PLATFORMS})
+    feats["infra"]["registrable"] = sorted({registrable(d) for d in doms if registrable(d)})
     feats["infra"]["domain_patterns"] = domain_patterns(feats["infra"]["registrable"])
     feats["text"]["body_norm"] = norm_text(h["body"])
     return feats

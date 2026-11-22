@@ -549,6 +549,13 @@ def render_incidents(graph, store):
         st.markdown(f"**Plików:** {f['n_files']}, **obrazów:** {len(f['images'])}")
         st.markdown(f"**Domeny:** {', '.join(f['infra']['registrable']) or '(brak)'}")
         st.markdown(f"**Trackery:** {', '.join(f['infra']['tracker_ids']) or '(brak)'}")
+        for r in f["infra"].get("rdap") or []:
+            if r.get("error"):
+                st.caption(f"RDAP {r['domain']}: {r['error']}")
+                continue
+            st.markdown(f"**RDAP {r['domain']}:** rejestrator: {r.get('registrar') or '—'} · "
+                        f"NS: {', '.join(r.get('ns') or []) or '—'} · "
+                        f"od {(r.get('created') or '?')[:10]} do {(r.get('expires') or '?')[:10]}")
         faces = f.get("faces", {})
         if faces.get("persons"):
             st.markdown("**Wizerunki osób:** " + ", ".join(

@@ -1,0 +1,29 @@
+# Kontekst builda: bez tego `docker build` wysyła ~1.7 GB (.venv 921M, data 567M, .git 72M).
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.git/
+.gitignore
+
+# dane robocze / artefakty — montowane z hosta w docker-compose.yml
+data/
+*.sqlite
+*.graph.json
+*.ioc.csv
+*.stix.json
+*token.txt
+eda_report.txt
+
+# katalogi opcjonalne
+tessdata/
+lib/
+samples/
+
+# zasoby hosta, niepotrzebne w obrazie
+.vscode/
+.idea/
+.DS_Store
+
+# UWAGA: kfk/models/ i kfk/faces_ref/ MUSZĄ zostać w kontekście —
+# obrazy dostają modele YuNet+SFace przez `RUN bash scripts/download_models.sh`.
