@@ -129,8 +129,11 @@ Opcjonalna integracja z **Meta Ad Library API** (sekcja „Biblioteka reklam (bo
 na stronie „Materiały i sprawdzenie"):
 wyszukiwanie reklam wg słów kluczowych (np. „zarabiaj z domu") i porównywanie
 ich treści ze znanymi kampaniami. Wymaga tokena Graph API (instrukcja w
-`kfk/adlibrary.py`); bez tokena sekcja działa na zapisanej syntetycznej próbce
-`samples/meta_ads_sample.json`.
+`kfk/adlibrary.py`); bez tokena sekcja działa na zapisanej próbce **realnych
+materiałów** `samples/meta_ads_sample.json` (wyciąg z realnych zgłoszeń zbioru:
+warianty fałszywych artykułów, strony inwestycyjne, wideo reklamowe — format
+odpowiedzi ads_archive zachowany dla demonstracji; pochodzenie opisane w polu
+`_source`). Świeże reklamy z API pobiera `scripts/fetch_meta_ads.py`.
 
 ---
 
@@ -198,10 +201,14 @@ Deduplikacja po domenie rejestrowalnej, pobieranie równoległe.
 
 ### Przykładowe dane
 
-- `samples/meta_ads_sample.json` — **syntetyczna** próbka odpowiedzi Meta Ad
-  Library (3 fikcyjne reklamy: dwa warianty znanych kampanii + jeden nowy
-  wzorzec). Służy do demo sekcji „Biblioteka reklam (bonus)" i trybu offline
-  `fb_collector.py --from-file` — bez tokena.
+- `samples/meta_ads_sample.json` — próbka w formacie odpowiedzi Meta Ad Library
+  zbudowana z **realnych materiałów reklamowych zbioru** (warianty kampanii:
+  fałszywe artykuły „zamach na Brzoskę", „Monika Olejnik", „wyprowadzono w
+  kajdankach", strony inwestycyjne, wideo reklamowe z realnym ID FB). Służy do
+  demo sekcji „Biblioteka reklam (bonus)" i trybu offline
+  `fb_collector.py --from-file` — bez tokena. Poprzednia syntetyczna próbka
+  (3 fikcyjne reklamy) została zachowana jako
+  `samples/meta_ads_sample.syntetyczna.json`.
 - Zbiór organizatora (reklamy/scamy do analizy) NIE jest częścią repozytorium
   (zakaz rozpowszechniania) — wrzuć go do `data/` (struktura
   `data/do_udostępnienia/<id>/...`), a pipeline zbierze go sam.

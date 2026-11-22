@@ -31,6 +31,35 @@ _CACHE_TTL_OK = 24 * 3600
 _CACHE_TTL_ERR = 120
 
 
+def _get_bounded(url: str, timeout: float):
+    """GET z twardym, całkowitym limitem czasu na domenę.
+
+    requests timeout dotyczy pojedynczych odczytów — serwer „kapiący" dane
+    (1 bajt co parę sekund) mógłby wisieć bez końca i blokować cały pipeline.
+    Tu pobieranie biegnie w wątku-daemonie, a my czekamy maksymalnie
+    timeout+3s; po przekroczeniu zwracamy None (wątek dogorywa w tle).
+    """
+    import threading
+
+    holder = {}
+
+    def work():
+        try:
+            holder["resp"] = requests.get(url, headers=_HEADERS,
+                                          timeout=(timeout, timeout))
+        except Exception as exc:  # noqa: BLE001
+            holder["exc"] = exc
+
+    t = threading.Thread(target=work, daemon=True)
+    t.start()
+    t.join(timeout + 3.0)
+    if t.is_alive():
+        return None
+    if "exc" in holder:
+        raise holder["exc"]
+    return holder.get("resp")
+
+
 def _vcard_fn(entity: dict) -> str:
     """Nazwa z vcard (['vcard', [['fn', {}, 'text', 'Nazwa'], ...]])."""
     for card in (entity.get("vcardArray"), entity.get("vcard")):
@@ -102,9 +131,11 @@ def enrich_domains(registrable_domains: list[str], timeout: float = 6.0,
             continue
         result = None
         try:
-            resp = requests.get(_RDAP_BASE + domain, headers=_HEADERS,
-                                timeout=timeout)
-            if resp.status_code != 200:
+            resp = _get_bounded(_RDAP_BASE + domain, timeout)
+            if resp is None:
+                result = {"domain": domain,
+                          "error": f"timeout po {timeout}s (twardy limit na domenę)"}
+            elif resp.status_code != 200:
                 result = {"domain": domain, "error": f"HTTP {resp.status_code}"}
             else:
                 try:
