@@ -26,22 +26,18 @@ UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 
 # (id incydentu, URL, data publikacji wg źródła)
+# JEDEN PRZYPADEK: deepfake Rafała Brzoski w kampaniach scam na Facebooku —
+# trzy powiązane materiały z publicznych źródeł (ta sama sprawa, różne ujęcia).
 ARTICLES = [
-    ("sekurak_nk_crypto_2026",
-     "https://sekurak.pl/kolejne-masowe-kradzieze-kryptowalut-o-wartosci-ponad-400-milionow-dolarow-przez-koree-polnocna-tym-razem-wykorzystujaca-przejete-konta-falszywe-wideokonferencje-nagrania-prawdziwych-osob-i-deepfak/",
-     "2026-11-18"),
-    ("sekurak_ceo_129m_2026",
-     "https://sekurak.pl/deepfakeami-podszywali-sie-pod-prezesow-prawnikow-ukradli-129-milionow/",
-     "2026-11-16"),
-    ("niebezpiecznik_vip_deepfake",
-     "https://niebezpiecznik.pl/post/uwaga-na-deepfakei-z-vip-ami-np-andrzejem-duda-robertem-lewandowskim/",
-     "2024-01-26"),
-    ("niebezpiecznik_kwasniewski_deepfake",
-     "https://niebezpiecznik.pl/post/przestepcy-uzyli-deepfakea-z-aleksandrem-kwasniewskim/",
-     "2023-11-03"),
-    ("niebezpiecznik_inwestycyjne",
-     "https://niebezpiecznik.pl/post/oszustwa-inwestycyjne-to-nie-jeden-telefon-od-konsultanta/",
-     "2024-01-26"),
+    ("brzoska_deepfake_sekurak_2024",
+     "https://sekurak.pl/deepfake-z-rafalem-brzoska-na-facebooku-w-trakcie-filmu-cos-sie-popsulo-i-wjezdza-rosyjski-akcent/",
+     "2024-03-20"),
+    ("brzoska_czolgiem_niebezpiecznik_2026",
+     "https://niebezpiecznik.pl/post/rafal-brzoska-czolgiem-po-facebooku/",
+     "2026-08-18"),
+    ("brzoska_deepfake_sekurak_top10_2026",
+     "https://sekurak.pl/10-deepfakeow-ktore-zmienily-swiat-zobacz-nasze-zestawienie/",
+     "2026-01-29"),
 ]
 
 
@@ -76,14 +72,26 @@ def build_incident(inc_id: str, url: str, pub_date: str):
                  f"<h1>{html.escape(title)}</h1><pre>{html.escape(body)}</pre>"
                  "</body></html>")
     (inc_dir / "page.html").write_text(page_html, encoding="utf-8", errors="replace")
+    # obrazy: og:image + pierwsze obrazy z treści artykułu (klatki deepfake'u,
+    # zrzuty fałszywych reklam) — dają cechy wizualne i widok twarzy
+    img_urls = []
     og = soup.find("meta", property="og:image")
     if og and og.get("content"):
-        img_url = urljoin(url, og["content"])
+        img_urls.append(urljoin(url, og["content"]))
+    if main is not None:
+        for im in main.find_all("img", src=True)[:8]:
+            img_urls.append(urljoin(url, im["src"]))
+    saved_n = 0
+    for i, img_url in enumerate(img_urls):
+        if saved_n >= 8:
+            break
         try:
             ir = requests.get(img_url, headers={"User-Agent": UA}, timeout=20)
-            ext = ".png" if "png" in ir.headers.get("content-type", "") else ".jpg"
-            if ir.status_code == 200 and len(ir.content) > 2000:
-                (inc_dir / f"lead{ext}").write_bytes(ir.content)
+            ct = ir.headers.get("content-type", "").lower()
+            ext = ".png" if "png" in ct else ".jpg" if "jpeg" in ct or "jpg" in ct else ""
+            if ir.status_code == 200 and ext and len(ir.content) > 2000:
+                (inc_dir / f"img_{saved_n:02d}{ext}").write_bytes(ir.content)
+                saved_n += 1
         except Exception:
             pass
     meta = {

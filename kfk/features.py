@@ -71,6 +71,9 @@ SCAM_LEXICON = [
     "wyprowadzono go w kajdankach", "media o tym milczą",
     # PL — cudowne zdrowie / zamów
     "cudowny lek", "rewolucyjny lek", "lek na stawy", "zamów teraz",
+    # PL — deepfake / podszywanie się pod osoby publiczne
+    "deepfake", "oszustw", "fałszywa reklama", "fałszywe reklamy",
+    "podszywają się pod", "sztucznie wygenerowan", "wizerunek",
     # EN — zarabianie / inwestycje
     "earn from home", "make money online", "guaranteed profit", "no risk",
     "double your money", "passive income", "get rich quick", "sign up bonus",
