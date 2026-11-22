@@ -208,11 +208,6 @@ Deduplikacja po domenie rejestrowalnej, pobieranie równoległe.
   inwestycyjnego, wspólny GTM/AW) oraz 3 pojedyncze materiały (sklep z dronem, „dopłata
   dla seniorów”, loteria). Służy do demo sekcji „Biblioteka reklam (bonus)” i trybu
   offline `fb_collector.py --from-file` — bez tokena.
-- `samples/meta_ads_sample.realne.json` — poprzednia próbka zbudowana z **realnych
-  materiałów reklamowych zbioru** (zarchiwizowana; zawiera narracje z prawdziwymi
-  osobami publicznymi — stosuj ostrożnie przy publicznych prezentacjach).
-- `samples/meta_ads_sample.syntetyczna.json` — historyczna syntetyczna próbka
-  (3 fikcyjne reklamy) sprzed powstania próbek powyżej.
 - Zbiór organizatora (reklamy/scamy do analizy) NIE jest częścią repozytorium
   (zakaz rozpowszechniania) — wrzuć go do `data/` (struktura
   `data/do_udostępnienia/<id>/...`), a pipeline zbierze go sam.

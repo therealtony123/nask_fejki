@@ -184,7 +184,7 @@ def extract_incident_faces(image_paths: list, ref=None) -> dict:
 
     Zwraca:
       persons:      [{name, score, path, box}] — zidentyfikowane osoby z bazy,
-      known_names:  unikalne nazwy osób (np. ["Rafał Brzoska"]),
+      known_names:  unikalne nazwy osób (np. ["Monika Olejnik"]),
       unknown_embs: embeddingi niezidentyfikowanych twarzy (do porównań
                     "ta sama twarz" między materiałami).
     """

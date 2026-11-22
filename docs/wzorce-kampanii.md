@@ -118,7 +118,7 @@ Artykuły udające doniesienia medialne, promowane reklamami w Meta Ads i prowad
 Facebooka (identyfikator FB_…), te same wizerunki osób publicznych w bazie twarzy oraz świeże
 domeny rejestrowane tuż przed publikacją.
 
-- **K01** — „«Wiem, kto strzelał»: zamach na Rafała Brzoskę, założyciela InPostu — Gazeta.pl":
+- **K01** — false-news z deepfake wizerunkiem znanego przedsiębiorcy (kampania „wiem, kto strzelał”):
   dwie wersje www (civicdaybook.live oraz acrosscommunities.live + crimsonbase.pro +
   healthlinkq.pro). Treść cos=1.00 między wersjami www; wspólny piksel FB_2012165449475163
   (facebook-pixel); wizerunek Mateusza Morawieckiego.

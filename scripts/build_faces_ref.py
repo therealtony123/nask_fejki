@@ -24,7 +24,6 @@ PEOPLE = [
     ("andrzej_duda", "Andrzej Duda"),
     ("jaroslaw_kaczynski", "Jarosław Kaczyński"),
     ("szymon_holownia", "Szymon Hołownia"),
-    ("rafal_brzoska", "Rafał Brzoska"),
     ("monika_olejnik", "Monika Olejnik"),
     ("robert_lewandowski", "Robert Lewandowski"),
     ("kuba_wojewodzki", "Kuba Wojewódzki"),
